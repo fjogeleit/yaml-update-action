@@ -121,7 +121,7 @@ export async function gitProcessing(branch: string, filePath: string, commitMess
 
   await git
     .fetch()
-    .pull('origin', branch, {'--no-rebase': null})
+    .pull('origin', branch, {'--rebase': null})
     .catch(() => {})
 
   actions.debug(`Pulled last changes`)
