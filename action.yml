@@ -1,0 +1,43 @@
+name: 'Your name here'
+description: 'Provide a description here'
+author: 'Your name or organization here'
+inputs:
+  valueFile:
+    required: true
+    description: 'YAML file which should be updated'
+  propertyPath:
+    required: true
+    description: 'Property Path - using dot for nesting: e.g. backend.version'
+  value:
+    required: true
+    description: 'New property value'
+  branch:
+    required: true
+    description: 'Branch to commit the change, will be created if not exist'
+  targetBranch:
+    required: true
+    description: 'Target Branch for the created PullRequest'
+    default: master
+  createPR:
+    required: false
+    description: 'Create a PullRequest to the configured target branch'
+    default: 'true'
+  message:
+    required: false
+    description: 'Commit message for the value update'
+    default: 'true'
+  token:
+    required: true
+    description: 'GitHub AuthToken for Athorization'
+    default: ${{ github.token }}
+  author_name:
+    required: true
+    description: 'Git Author Name'
+    default: ${{ github.actor }}
+  author_email:
+    required: true
+    description: 'Git Autthor Email'
+    default: ${{ github.actor }}@users.noreply.github.com
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

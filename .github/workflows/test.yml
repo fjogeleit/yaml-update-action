@@ -1,0 +1,31 @@
+name: 'build-test'
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - README.md
+
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          npm install
+      - run: |
+          npm run all
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'backend.version'
+          value: v1.0.1
+          branch: deployment/v1.0.1
+          targetBranch: master
+          createPR: 'false'
+          message: 'Update Image Version to v1.0.1' 
