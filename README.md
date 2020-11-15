@@ -41,7 +41,7 @@ jobs:
           docker push $IMAGE_ID:$VERSION
           echo "::set-output name=version::$VERSION"
 
-      - name: Deploy on K8s
+      - name: Update Image Version in the related HelmChart values.yaml
         uses: fjogeleit/yaml-update-action@master
         with:
           valueFile: 'deplyoment/helm/values.yaml'
