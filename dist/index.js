@@ -28,7 +28,8 @@ const rest_1 = __webpack_require__(5375);
 const git_commands_1 = __webpack_require__(4703);
 function run(options, actions) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filePath = path_1.default.join(process.cwd(), options.valueFile);
+        const filePath = path_1.default.join(process.cwd(), options.workDir, options.valueFile);
+        actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir: options.workDir, valueFile: options.valueFile })}`);
         try {
             const yamlContent = parseFile(filePath);
             actions.debug(`Parsed JSON: ${JSON.stringify(yamlContent)}`);
@@ -36,8 +37,8 @@ function run(options, actions) {
             const newYamlContent = convert(result);
             actions.debug(`Generated updated YAML
     
-    ${newYamlContent}
-    `);
+${newYamlContent}
+`);
             const octokit = new rest_1.Octokit({ auth: options.token });
             const file = {
                 relativePath: options.valueFile,
@@ -58,7 +59,7 @@ function run(options, actions) {
 exports.run = run;
 function runTest(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filePath = path_1.default.join(process.cwd(), options.valueFile);
+        const filePath = path_1.default.join(process.cwd(), options.workDir, options.valueFile);
         const yamlContent = parseFile(filePath);
         const json = replace(options.value, options.propertyPath, yamlContent);
         const yaml = convert(json);
@@ -119,6 +120,7 @@ function gitProcessing(repository, branch, file, commitMessage, octokit, actions
         actions.debug(JSON.stringify({ createdTree: newTreeSha }));
         const newCommitSha = yield git_commands_1.createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha);
         actions.debug(JSON.stringify({ createdCommit: newCommitSha }));
+        actions.setOutput('commit', newCommitSha);
         yield git_commands_1.updateBranch(octokit, owner, repo, branch, newCommitSha);
         actions.debug(`Complete`);
     });
@@ -377,6 +379,9 @@ class GitHubOptions {
     get message() {
         return core.getInput('message');
     }
+    get workDir() {
+        return core.getInput('workDir');
+    }
 }
 exports.GitHubOptions = GitHubOptions;
 class EnvOptions {
@@ -406,6 +411,9 @@ class EnvOptions {
     }
     get repository() {
         return process.env.REPOSITORY || '';
+    }
+    get workDir() {
+        return process.env.WORK_DIR || '.';
     }
 }
 exports.EnvOptions = EnvOptions;

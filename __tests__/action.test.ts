@@ -4,7 +4,8 @@ import {runTest} from '../src/action'
 import {EnvOptions} from '../src/options'
 
 test('test success', async () => {
-  process.env['VALUE_FILE'] = '__tests__/fixtures/values.yaml'
+  process.env['VALUE_FILE'] = 'fixtures/values.yaml'
+  process.env['WORK_DIR'] = '__tests__'
   process.env['VALUE_PATH'] = 'backend.version'
   process.env['VALUE'] = 'v1.1.0'
   process.env['BRANCH'] = 'deployment/v1.1.0'
@@ -16,7 +17,8 @@ test('test success', async () => {
 })
 
 test('test yaml value path error', async () => {
-  process.env['VALUE_FILE'] = '__tests__/fixtures/values.yaml'
+  process.env['VALUE_FILE'] = 'fixtures/values.yaml'
+  process.env['WORK_DIR'] = '__tests__'
   process.env['VALUE_PATH'] = 'frontend.version'
   process.env['VALUE'] = 'v1.1.0'
 
@@ -24,15 +26,19 @@ test('test yaml value path error', async () => {
 })
 
 test('test yaml file path error', async () => {
-  process.env['VALUE_FILE'] = '__tests__/fixtures/not-exist.yaml'
+  process.env['VALUE_FILE'] = 'fixtures/not-exist.yaml'
+  process.env['WORK_DIR'] = '__tests__'
   process.env['VALUE_PATH'] = 'frontend.version'
   process.env['VALUE'] = 'v1.1.0'
 
-  expect(runTest(new EnvOptions())).rejects.toThrowError(`could not parse file with path: ${path.join(__dirname, '..', process.env['VALUE_FILE'])}`)
+  expect(runTest(new EnvOptions())).rejects.toThrowError(
+    `could not parse file with path: ${path.join(__dirname, '..', process.env['WORK_DIR'], process.env['VALUE_FILE'])}`
+  )
 })
 
 test('test yaml file parse error', async () => {
-  process.env['VALUE_FILE'] = '__tests__/fixtures/values.txt'
+  process.env['VALUE_FILE'] = 'fixtures/values.txt'
+  process.env['WORK_DIR'] = '__tests__'
   process.env['VALUE_PATH'] = 'frontend.version'
   process.env['VALUE'] = 'v1.1.0'
 

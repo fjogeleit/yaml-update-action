@@ -34,6 +34,10 @@ inputs:
     required: true
     description: 'repoistory to update'
     default: ${{ github.repository }}
+  workDir:
+    required: true
+    description: 'repository workspace location'
+    default: .
 runs:
   using: 'node12'
   main: 'dist/index.js'

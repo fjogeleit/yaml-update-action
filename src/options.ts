@@ -11,6 +11,7 @@ export interface Options {
   repository: string
   createPR: boolean
   message: string
+  workDir: string
 }
 
 export class GitHubOptions {
@@ -49,6 +50,10 @@ export class GitHubOptions {
   get message(): string {
     return core.getInput('message')
   }
+
+  get workDir(): string {
+    return core.getInput('workDir')
+  }
 }
 
 export class EnvOptions {
@@ -86,5 +91,9 @@ export class EnvOptions {
 
   get repository(): string {
     return process.env.REPOSITORY || ''
+  }
+
+  get workDir(): string {
+    return process.env.WORK_DIR || '.'
   }
 }

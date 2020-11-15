@@ -1,7 +1,7 @@
 # YAML Update Action
 
 Update a single value in an existing YAML File. 
-Push this updated YAML to an existing branch or create a new branch
+Push this updated YAML to an existing branch or create a new branch.
 Open a PullRequest to an configurable targetBranch with a custom label "yaml-update"
 
 ## Use Case
@@ -60,19 +60,18 @@ jobs:
 |valueFile | relative path from the Workspace Directory| _required_ Field |
 |propertyPath| PropertyPath for the new value | _required_ Field |
 |value  | New value for the related PropertyPath| _required_ Field |
-|repository| The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{ github.repository }} |
+|repository| The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{github.repository}} |
 |branch    | The updated YAML file will be commited to this branch, branch will be created if not exists | _required_ Field |
 |message| Commit message for the changed YAML file |_required_ Field|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | 'true' |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
-|token| GitHub API Token which is used to create the PR, have the have right permissions for the selected repository | ${{ github.token }}|
+|token| GitHub API Token which is used to create the PR, have the have right permissions for the selected repository | ${{github.token}}|
+|workDir| relative location of the configured `repository` | . |
 
 ### Output
 
-- `commit` Git Commit Informations
-- `push` Git Push Informations
+- `commit` Git Commit SHA
 - `pull_request` Git PR Informations
-
 
 ### Debug Informations
 
@@ -84,6 +83,8 @@ Enable Debug mode to get informations about
 ### Known Issues
 
 In this first version the updated YAML file will not be patched. It is parsed into JSON, after the updated its updated back to YAML. This means that comments and blank lines will be removed in this provess and the intend of the updated content can be different to the previous
+
+At this point in time only string values are supported
 
 ### Advaned Example with an separate target repository
 
@@ -133,5 +134,6 @@ jobs:
           targetBranch: development
           createPR: 'true'
           message: 'Update Image Version to ${{ steps.image.outputs.version }}'
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workDir: infrastructure
 ```

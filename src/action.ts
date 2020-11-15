@@ -9,7 +9,9 @@ import {ChangedFile, repositoryInformation, currentCommit, createBlobForFile, cr
 export type YamlNode = {[key: string]: string | number | boolean | YamlNode}
 
 export async function run(options: Options, actions: Actions): Promise<void> {
-  const filePath = path.join(process.cwd(), options.valueFile)
+  const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
+
+  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir: options.workDir, valueFile: options.valueFile})}`)
 
   try {
     const yamlContent: YamlNode = parseFile(filePath)
@@ -22,8 +24,8 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 
     actions.debug(`Generated updated YAML
     
-    ${newYamlContent}
-    `)
+${newYamlContent}
+`)
 
     const octokit = new Octokit({auth: options.token})
 
@@ -45,7 +47,7 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 }
 
 export async function runTest<T extends YamlNode>(options: Options): Promise<{json: T; yaml: string}> {
-  const filePath = path.join(process.cwd(), options.valueFile)
+  const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
 
   const yamlContent: T = parseFile<T>(filePath)
 
@@ -131,6 +133,7 @@ export async function gitProcessing(
   const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha)
 
   actions.debug(JSON.stringify({createdCommit: newCommitSha}))
+  actions.setOutput('commit', newCommitSha)
 
   await updateBranch(octokit, owner, repo, branch, newCommitSha)
 

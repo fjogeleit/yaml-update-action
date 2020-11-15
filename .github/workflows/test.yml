@@ -29,13 +29,12 @@ jobs:
 
   test-target-repository:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./infrastructure
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: infrastructure
       - name: Update values.yaml
-        uses: ./
+        uses: ./infrastructure
         with:
           valueFile: '__tests__/fixtures/values.yaml'
           propertyPath: 'backend.version'
@@ -44,3 +43,4 @@ jobs:
           targetBranch: master
           createPR: 'false'
           message: 'Update Image Version to v1.2.1' 
+          workDir: infrastructure
