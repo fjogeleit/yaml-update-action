@@ -1,28 +1,22 @@
 import YAML from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import {Options, Author} from './options'
-import simpleGit, {SimpleGit} from 'simple-git'
-import {Octokit} from './github-client'
+import {Options} from './options'
+import {Octokit} from '@octokit/rest'
 import {Actions} from './github-actions'
-
-const git: SimpleGit = simpleGit({
-  baseDir: process.cwd(),
-  binary: 'git',
-  maxConcurrentProcesses: 6
-})
+import {ChangedFile, repositoryInformation, currentCommit, createBlobForFile, createNewCommit, createNewTree, updateBranch} from './git-commands'
 
 export type YamlNode = {[key: string]: string | number | boolean | YamlNode}
 
-export async function run<T extends YamlNode>(options: Options, actions: Actions): Promise<void> {
+export async function run(options: Options, actions: Actions): Promise<void> {
   const filePath = path.join(process.cwd(), options.valueFile)
 
   try {
-    const yamlContent: T = parseFile<T>(filePath)
+    const yamlContent: YamlNode = parseFile(filePath)
 
     actions.debug(`Parsed JSON: ${JSON.stringify(yamlContent)}`)
 
-    const result = replace<T>(options.value, options.propertyPath, yamlContent)
+    const result = replace(options.value, options.propertyPath, yamlContent)
 
     const newYamlContent = convert(result)
 
@@ -31,31 +25,34 @@ export async function run<T extends YamlNode>(options: Options, actions: Actions
     ${newYamlContent}
     `)
 
-    writeTo(newYamlContent, filePath)
+    const octokit = new Octokit({auth: options.token})
 
-    actions.debug(`Local File ${filePath} was updated`)
-  } catch (error) {
-    actions.setFailed(error.toString())
-    return
-  }
+    const file: ChangedFile = {
+      relativePath: options.valueFile,
+      absolutePath: filePath,
+      content: newYamlContent
+    }
 
-  try {
-    await gitProcessing(options.branch, options.valueFile, options.message, options.author, actions)
+    await gitProcessing(options.repository, options.branch, file, options.message, octokit, actions)
 
     if (options.createPR) {
-      await createPullRequest(options.branch, options.targetBranch, options.token, options.message, actions)
+      await createPullRequest(options.repository, options.branch, options.targetBranch, options.message, octokit, actions)
     }
   } catch (error) {
-    actions.setFailed(error.toString())
+    actions.setFailed(error)
+    return
   }
 }
 
-export async function runTest<T extends YamlNode>(options: Options): Promise<T> {
+export async function runTest<T extends YamlNode>(options: Options): Promise<{json: T; yaml: string}> {
   const filePath = path.join(process.cwd(), options.valueFile)
 
   const yamlContent: T = parseFile<T>(filePath)
 
-  return replace<T>(options.value, options.propertyPath, yamlContent)
+  const json = replace<T>(options.value, options.propertyPath, yamlContent)
+  const yaml = convert(json)
+
+  return {json, yaml}
 }
 
 export function parseFile<T extends YamlNode>(filePath: string): T {
@@ -110,41 +107,45 @@ export function writeTo(yamlString: string, filePath: string): void {
   fs.writeFileSync(filePath, yamlString)
 }
 
-export async function gitProcessing(branch: string, filePath: string, commitMessage: string, author: Author, actions: Actions): Promise<void> {
-  await git.addConfig('user.email', author.email).addConfig('user.name', author.name)
+export async function gitProcessing(
+  repository: string,
+  branch: string,
+  file: ChangedFile,
+  commitMessage: string,
+  octokit: Octokit,
+  actions: Actions
+): Promise<void> {
+  const {owner, repo} = repositoryInformation(repository)
+  const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch)
 
-  await git.fetch(['--tags', '--force'])
+  actions.debug(JSON.stringify({baseCommit: commitSha, baseTree: treeSha}))
 
-  await git.checkout(branch, undefined).catch(() => git.checkoutLocalBranch(branch))
+  file.sha = await createBlobForFile(octokit, owner, repo, file)
 
-  actions.debug(`Branch checkout: ${actions}`)
+  actions.debug(JSON.stringify({fileBlob: file.sha}))
 
-  await git
-    .fetch()
-    .pull('origin', branch, {'--rebase': null})
-    .catch(() => {})
+  const newTreeSha = await createNewTree(octokit, owner, repo, file, treeSha)
 
-  actions.debug(`Pulled last changes`)
+  actions.debug(JSON.stringify({createdTree: newTreeSha}))
 
-  await git.add(filePath)
+  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha)
 
-  const summery = await git.commit(commitMessage)
+  actions.debug(JSON.stringify({createdCommit: newCommitSha}))
 
-  actions.debug(`Commited: ${summery.commit}`)
+  await updateBranch(octokit, owner, repo, branch, newCommitSha)
 
-  actions.setOutput('commit', JSON.stringify(summery))
-
-  const pushed = await git.push('origin', branch, {'--set-upstream': null})
-
-  actions.debug(`Pushed branch to origin: ${pushed.branch}`)
-
-  actions.setOutput('push', JSON.stringify(pushed))
+  actions.debug(`Complete`)
 }
 
-export async function createPullRequest(branch: string, targetBranch: string, token: string, commitMessage: string, actions: Actions): Promise<void> {
-  const octokit = new Octokit({auth: token})
-
-  const {owner, repo} = await getRemoteDetail()
+export async function createPullRequest(
+  repository: string,
+  branch: string,
+  targetBranch: string,
+  commitMessage: string,
+  octokit: Octokit,
+  actions: Actions
+): Promise<void> {
+  const {owner, repo} = repositoryInformation(repository)
 
   const response = await octokit.pulls.create({
     owner,
@@ -166,34 +167,4 @@ export async function createPullRequest(branch: string, targetBranch: string, to
   })
 
   actions.debug(`Add Label: "yaml-update"`)
-}
-
-interface RepositoryInformation {
-  owner: string
-  repo: string
-}
-
-export async function getRemoteDetail(): Promise<RepositoryInformation> {
-  const config = (await git.listConfig()).all
-
-  const remoteUrl: string = (config['remote.origin.url'] as string) || ''
-
-  const httpsUrlPattern = /^https:\/\/.*@?github.com\/(.+\/.+)$/i
-  const sshUrlPattern = /^git@github.com:(.+\/.+).git$/i
-
-  const httpsMatch = remoteUrl.match(httpsUrlPattern)
-  if (httpsMatch) {
-    const [owner, repo] = httpsMatch[1].split('/')
-
-    return {owner, repo}
-  }
-
-  const sshMatch = remoteUrl.match(sshUrlPattern)
-  if (sshMatch) {
-    const [owner, repo] = sshMatch[1].split('/')
-
-    return {owner, repo}
-  }
-
-  throw new Error(`The format of '${remoteUrl}' is not a valid GitHub repository URL`)
 }

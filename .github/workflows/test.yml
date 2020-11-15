@@ -1,6 +1,5 @@
 name: 'build-test'
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -27,3 +26,21 @@ jobs:
           targetBranch: master
           createPR: 'false'
           message: 'Update Image Version to v1.0.1' 
+
+  test-target-repository:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infrastructure
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update values.yaml
+        uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'backend.version'
+          value: v1.2.1
+          branch: deployment/v1.2.1
+          targetBranch: master
+          createPR: 'false'
+          message: 'Update Image Version to v1.2.1' 

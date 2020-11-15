@@ -9,9 +9,10 @@ test('test success', async () => {
   process.env['VALUE'] = 'v1.1.0'
   process.env['BRANCH'] = 'deployment/v1.1.0'
 
-  const result = await runTest<{backend: {version: string}; frontend: boolean}>(new EnvOptions())
+  const {json, yaml} = await runTest<{backend: {version: string}; frontend: boolean}>(new EnvOptions())
 
-  expect(result.backend.version).toEqual(process.env['VALUE'])
+  expect(json.backend.version).toEqual(process.env['VALUE'])
+  console.info(yaml)
 })
 
 test('test yaml value path error', async () => {
