@@ -21,7 +21,7 @@ inputs:
   createPR:
     required: false
     description: 'Create a PullRequest to the configured target branch'
-    default: 'true'
+    default: 'false'
   message:
     required: false
     description: 'Commit message for the value update'
