@@ -1,3 +1,4 @@
 backend:
-  version: v1.0.1
+  version: v1.2.0
 frontent: false
+config: {}

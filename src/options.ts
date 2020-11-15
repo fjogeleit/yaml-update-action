@@ -1,11 +1,6 @@
 import * as core from '@actions/core'
 import * as process from 'process'
 
-export interface Author {
-  name: string
-  email: string
-}
-
 export interface Options {
   valueFile: string
   propertyPath: string
@@ -13,9 +8,9 @@ export interface Options {
   token: string
   branch: string
   targetBranch: string
+  repository: string
   createPR: boolean
   message: string
-  author: Author
 }
 
 export class GitHubOptions {
@@ -39,6 +34,10 @@ export class GitHubOptions {
     return core.getInput('targetBranch')
   }
 
+  get repository(): string {
+    return core.getInput('repository')
+  }
+
   get createPR(): boolean {
     return core.getInput('createPR') === 'true'
   }
@@ -49,13 +48,6 @@ export class GitHubOptions {
 
   get message(): string {
     return core.getInput('message')
-  }
-
-  get author(): Author {
-    return {
-      name: core.getInput('author_name'),
-      email: core.getInput('author_email')
-    }
   }
 }
 
@@ -92,10 +84,7 @@ export class EnvOptions {
     return process.env.MESSAGE || ''
   }
 
-  get author(): Author {
-    return {
-      name: process.env.AUTHOR_NAME || '',
-      email: process.env.AUTHOR_EMAIL || ''
-    }
+  get repository(): string {
+    return process.env.REPOSITORY || ''
   }
 }
