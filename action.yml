@@ -1,6 +1,6 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'YAML Update Action'
+description: 'Update the property of an existing YAML File'
+author: 'Frank Jogeleit <frank.jogeleit@web.de>'
 inputs:
   valueFile:
     required: true
