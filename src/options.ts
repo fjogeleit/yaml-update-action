@@ -6,15 +6,16 @@ export interface Options {
   propertyPath: string
   value: string | number | boolean
   token: string
+  commitChange: boolean
   branch: string
+  message: string
   targetBranch: string
   repository: string
   createPR: boolean
-  message: string
   workDir: string
 }
 
-export class GitHubOptions {
+export class GitHubOptions implements Options {
   get valueFile(): string {
     return core.getInput('valueFile')
   }
@@ -29,6 +30,10 @@ export class GitHubOptions {
 
   get branch(): string {
     return core.getInput('branch')
+  }
+
+  get commitChange(): boolean {
+    return core.getInput('commitChange') === 'true'
   }
 
   get targetBranch(): string {
@@ -56,7 +61,7 @@ export class GitHubOptions {
   }
 }
 
-export class EnvOptions {
+export class EnvOptions implements Options {
   get valueFile(): string {
     return process.env.VALUE_FILE || ''
   }
@@ -71,6 +76,10 @@ export class EnvOptions {
 
   get branch(): string {
     return process.env.BRANCH || ''
+  }
+
+  get commitChange(): boolean {
+    return process.env.COMMIT_CHANGE === 'true'
   }
 
   get targetBranch(): string {

@@ -61,8 +61,9 @@ jobs:
 |propertyPath| PropertyPath for the new value | _required_ Field |
 |value  | New value for the related PropertyPath| _required_ Field |
 |repository| The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{github.repository}} |
-|branch    | The updated YAML file will be commited to this branch, branch will be created if not exists | _required_ Field |
-|message| Commit message for the changed YAML file |_required_ Field|
+|commitChange| Commit the change to __branch__ with the given __message__ | 'true' |
+|branch    | The updated YAML file will be commited to this branch, branch will be created if not exists | master |
+|message| Commit message for the changed YAML file | ''|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | 'true' |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
 |token| GitHub API Token which is used to create the PR, have the have right permissions for the selected repository | ${{github.token}}|

@@ -14,6 +14,7 @@ inputs:
   branch:
     required: true
     description: 'Branch to commit the change, will be created if not exist'
+    default: 'master'
   targetBranch:
     required: true
     description: 'Target Branch for the created PullRequest'
@@ -22,10 +23,14 @@ inputs:
     required: false
     description: 'Create a PullRequest to the configured target branch'
     default: 'false'
+  commitChange:
+    required: true
+    description: 'Commit the change "branch" with the given "message"'
+    default: 'true'
   message:
     required: false
     description: 'Commit message for the value update'
-    default: 'true'
+    default: ''
   token:
     required: true
     description: 'GitHub AuthToken for Athorization'
