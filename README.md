@@ -83,7 +83,7 @@ Enable Debug mode to get informations about
 
 ### Known Issues
 
-In this first version the updated YAML file will not be patched. It is parsed into JSON, after the updated its updated back to YAML. This means that comments and blank lines will be removed in this provess and the intend of the updated content can be different to the previous
+In this first version the updated YAML file will not be patched. It is parsed into JSON, after the update its converted back to YAML. This means that comments and blank lines will be removed in this process and the intend of the updated content can be different to the previous.
 
 At this point in time only string values are supported
 
