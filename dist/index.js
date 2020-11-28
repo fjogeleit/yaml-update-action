@@ -39,6 +39,9 @@ function run(options, actions) {
     
 ${newYamlContent}
 `);
+            if (options.commitChange === false) {
+                return;
+            }
             const octokit = new rest_1.Octokit({ auth: options.token });
             const file = {
                 relativePath: options.valueFile,
@@ -168,7 +171,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.repositoryInformation = exports.updateBranch = exports.createNewCommit = exports.createNewTree = exports.createBlobForFile = exports.currentCommit = void 0;
-exports.currentCommit = (octo, org, repo, branch) => __awaiter(void 0, void 0, void 0, function* () {
+const currentCommit = (octo, org, repo, branch) => __awaiter(void 0, void 0, void 0, function* () {
     let commitSha = '';
     try {
         const { data: refData } = yield octo.git.getRef({
@@ -196,7 +199,8 @@ exports.currentCommit = (octo, org, repo, branch) => __awaiter(void 0, void 0, v
         treeSha: commitData.tree.sha
     };
 });
-exports.createBlobForFile = (octo, org, repo, file) => __awaiter(void 0, void 0, void 0, function* () {
+exports.currentCommit = currentCommit;
+const createBlobForFile = (octo, org, repo, file) => __awaiter(void 0, void 0, void 0, function* () {
     const { data } = yield octo.git.createBlob({
         owner: org,
         repo,
@@ -205,12 +209,14 @@ exports.createBlobForFile = (octo, org, repo, file) => __awaiter(void 0, void 0,
     });
     return data.sha;
 });
-exports.createNewTree = (octo, owner, repo, file, parentTreeSha) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createBlobForFile = createBlobForFile;
+const createNewTree = (octo, owner, repo, file, parentTreeSha) => __awaiter(void 0, void 0, void 0, function* () {
     const tree = [{ path: file.relativePath, mode: `100644`, type: `blob`, sha: file.sha }];
     const { data } = yield octo.git.createTree({ owner, repo, tree, base_tree: parentTreeSha });
     return data.sha;
 });
-exports.createNewCommit = (octo, owner, repo, message, treeSha, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createNewTree = createNewTree;
+const createNewCommit = (octo, owner, repo, message, treeSha, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
     const { data } = yield octo.git.createCommit({
         owner,
         repo,
@@ -220,7 +226,8 @@ exports.createNewCommit = (octo, owner, repo, message, treeSha, commitSha) => __
     });
     return data.sha;
 });
-exports.updateBranch = (octo, owner, repo, branch, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createNewCommit = createNewCommit;
+const updateBranch = (octo, owner, repo, branch, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield octo.git.updateRef({
             owner,
@@ -238,6 +245,7 @@ exports.updateBranch = (octo, owner, repo, branch, commitSha) => __awaiter(void 
         });
     }
 });
+exports.updateBranch = updateBranch;
 function repositoryInformation(repository) {
     const [owner, repo] = repository.split('/');
     return { owner, repo };
@@ -364,6 +372,9 @@ class GitHubOptions {
     get branch() {
         return core.getInput('branch');
     }
+    get commitChange() {
+        return core.getInput('commitChange') === 'true';
+    }
     get targetBranch() {
         return core.getInput('targetBranch');
     }
@@ -396,6 +407,9 @@ class EnvOptions {
     }
     get branch() {
         return process.env.BRANCH || '';
+    }
+    get commitChange() {
+        return process.env.COMMIT_CHANGE === 'true';
     }
     get targetBranch() {
         return process.env.TARGET_BRANCH || '';

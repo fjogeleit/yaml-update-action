@@ -27,6 +27,10 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 ${newYamlContent}
 `)
 
+    if (options.commitChange === false) {
+      return
+    }
+
     const octokit = new Octokit({auth: options.token})
 
     const file: ChangedFile = {
