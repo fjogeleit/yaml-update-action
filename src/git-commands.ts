@@ -29,7 +29,11 @@ export const currentCommit = async (octo: Octokit, org: string, repo: string, br
       ref: `heads/${branch}`
     })
 
-    commitSha = refData.object.sha
+    if (!refData.object?.sha) {
+      throw Error(`Failed to get current ref from heads/${branch}`)
+    }
+
+    commitSha = refData.object?.sha
   } catch (error) {
     const {data: refData} = await octo.git.getRef({
       owner: org,
@@ -37,7 +41,11 @@ export const currentCommit = async (octo: Octokit, org: string, repo: string, br
       ref: `heads/master`
     })
 
-    commitSha = refData.object.sha
+    if (!refData.object?.sha) {
+      throw Error(`Failed to get current ref from heads/master`)
+    }
+
+    commitSha = refData.object?.sha
   }
 
   const {data: commitData} = await octo.git.getCommit({
@@ -46,9 +54,13 @@ export const currentCommit = async (octo: Octokit, org: string, repo: string, br
     commit_sha: commitSha
   })
 
+  if (!commitData.tree?.sha) {
+    throw Error('Failed to get the commit')
+  }
+
   return {
     commitSha,
-    treeSha: commitData.tree.sha
+    treeSha: commitData.tree?.sha
   }
 }
 
@@ -59,6 +71,10 @@ export const createBlobForFile = async (octo: Octokit, org: string, repo: string
     content: file.content,
     encoding: 'utf-8'
   })
+
+  if (!data?.sha) {
+    throw Error('Failed to create file blob')
+  }
 
   return data.sha
 }
@@ -86,6 +102,10 @@ export const createNewCommit = async (
     tree: treeSha,
     parents: [commitSha]
   })
+
+  if (!data?.sha) {
+    throw Error('Failed to create commit')
+  }
 
   return data.sha
 }
