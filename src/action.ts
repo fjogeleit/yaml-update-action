@@ -66,7 +66,7 @@ export function parseFile<T extends YamlNode>(filePath: string): T {
     throw new Error(`could not parse file with path: ${filePath}`)
   }
 
-  const result: T = YAML.safeLoad(fs.readFileSync(filePath, 'utf8')) as T
+  const result: T = YAML.load(fs.readFileSync(filePath, 'utf8')) as T
 
   if (typeof result !== 'object') {
     throw new Error(`could not parse content as YAML`)
@@ -106,7 +106,7 @@ export function replace<T extends YamlNode>(value: string | number | boolean, va
 }
 
 export function convert(yamlContent: YamlNode): string {
-  return YAML.safeDump(yamlContent)
+  return YAML.dump(yamlContent)
 }
 
 export function writeTo(yamlString: string, filePath: string): void {
