@@ -66,7 +66,7 @@ jobs:
 |message| Commit message for the changed YAML file | ''|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | 'true' |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
-|token| GitHub API Token which is used to create the PR, have the have right permissions for the selected repository | ${{github.token}}|
+|token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
 |workDir| relative location of the configured `repository` | . |
 
 ### Output
