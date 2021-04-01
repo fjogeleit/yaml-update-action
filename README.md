@@ -89,8 +89,6 @@ At this point in time only string values are supported
 
 ### Advaned Example with an separate target repository
 
-
-Basic Usage:
 ```
 env:
   IMAGE_NAME: image
