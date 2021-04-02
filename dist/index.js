@@ -39,6 +39,9 @@ function run(options, actions) {
     
 ${newYamlContent}
 `);
+            if (options.updateFile === true) {
+                writeTo(newYamlContent, filePath, actions);
+            }
             if (options.commitChange === false) {
                 return;
             }
@@ -108,8 +111,12 @@ function convert(yamlContent) {
     return js_yaml_1.default.dump(yamlContent);
 }
 exports.convert = convert;
-function writeTo(yamlString, filePath) {
-    fs_1.default.writeFileSync(filePath, yamlString);
+function writeTo(yamlString, filePath, actions) {
+    fs_1.default.writeFile(filePath, yamlString, err => {
+        if (!err)
+            return;
+        actions.warning(err.message);
+    });
 }
 exports.writeTo = writeTo;
 function gitProcessing(repository, branch, file, commitMessage, octokit, actions) {
@@ -391,6 +398,9 @@ class GitHubOptions {
     get commitChange() {
         return core.getInput('commitChange') === 'true';
     }
+    get updateFile() {
+        return core.getInput('updateFile') === 'true';
+    }
     get targetBranch() {
         return core.getInput('targetBranch');
     }
@@ -426,6 +436,9 @@ class EnvOptions {
     }
     get commitChange() {
         return process.env.COMMIT_CHANGE === 'true';
+    }
+    get updateFile() {
+        return process.env.UPDATE_FILE === 'true';
     }
     get targetBranch() {
         return process.env.TARGET_BRANCH || '';

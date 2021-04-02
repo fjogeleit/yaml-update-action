@@ -7,6 +7,7 @@ export interface Options {
   value: string | number | boolean
   token: string
   commitChange: boolean
+  updateFile: boolean
   branch: string
   message: string
   targetBranch: string
@@ -34,6 +35,10 @@ export class GitHubOptions implements Options {
 
   get commitChange(): boolean {
     return core.getInput('commitChange') === 'true'
+  }
+
+  get updateFile(): boolean {
+    return core.getInput('updateFile') === 'true'
   }
 
   get targetBranch(): string {
@@ -80,6 +85,10 @@ export class EnvOptions implements Options {
 
   get commitChange(): boolean {
     return process.env.COMMIT_CHANGE === 'true'
+  }
+
+  get updateFile(): boolean {
+    return process.env.UPDATE_FILE === 'true'
   }
 
   get targetBranch(): string {
