@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - development
 
 jobs:
   build: 
@@ -44,3 +45,20 @@ jobs:
           createPR: 'false'
           message: 'Update Image Version to v1.2.1' 
           workDir: infrastructure
+
+  test-update-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cat Original values.yaml
+        run: cat __tests__/fixtures/values.yaml
+      - name: Update values.yaml
+        uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'backend.version'
+          value: v1.0.1
+          commitChange: 'false'
+          updateFile: 'true'
+      - name: Cat Updated values.yaml
+        run: cat __tests__/fixtures/values.yaml

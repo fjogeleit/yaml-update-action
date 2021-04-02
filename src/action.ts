@@ -27,6 +27,10 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 ${newYamlContent}
 `)
 
+    if (options.updateFile === true) {
+      writeTo(newYamlContent, filePath, actions)
+    }
+
     if (options.commitChange === false) {
       return
     }
@@ -109,8 +113,12 @@ export function convert(yamlContent: YamlNode): string {
   return YAML.dump(yamlContent)
 }
 
-export function writeTo(yamlString: string, filePath: string): void {
-  fs.writeFileSync(filePath, yamlString)
+export function writeTo(yamlString: string, filePath: string, actions: Actions): void {
+  fs.writeFile(filePath, yamlString, err => {
+    if (!err) return
+
+    actions.warning(err.message)
+  })
 }
 
 export async function gitProcessing(
