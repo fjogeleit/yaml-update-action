@@ -46,7 +46,15 @@ ${newYamlContent}
     await gitProcessing(options.repository, options.branch, file, options.message, octokit, actions)
 
     if (options.createPR) {
-      await createPullRequest(options.repository, options.branch, options.targetBranch, options.message, octokit, actions)
+      await createPullRequest(
+        options.repository,
+        options.branch,
+        options.targetBranch,
+        options.labels,
+        options.title || `Merge: ${options.message}`,
+        octokit,
+        actions
+      )
     }
   } catch (error) {
     actions.setFailed(error)
@@ -156,7 +164,8 @@ export async function createPullRequest(
   repository: string,
   branch: string,
   targetBranch: string,
-  commitMessage: string,
+  labels: string[],
+  title: string,
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
@@ -165,7 +174,7 @@ export async function createPullRequest(
   const response = await octokit.pulls.create({
     owner,
     repo,
-    title: `Merge: ${commitMessage}`,
+    title,
     head: branch,
     base: targetBranch
   })
@@ -178,8 +187,8 @@ export async function createPullRequest(
     owner,
     repo,
     issue_number: response.data.number,
-    labels: ['yaml-update']
+    labels
   })
 
-  actions.debug(`Add Label: "yaml-update"`)
+  actions.debug(`Add Label: ${labels.join(', ')}`)
 }
