@@ -10,6 +10,8 @@ export interface Options {
   updateFile: boolean
   branch: string
   message: string
+  title: string
+  labels: string[]
   targetBranch: string
   repository: string
   createPR: boolean
@@ -61,6 +63,20 @@ export class GitHubOptions implements Options {
     return core.getInput('message')
   }
 
+  get title(): string {
+    return core.getInput('title')
+  }
+
+  get labels(): string[] {
+    if (!core.getInput('labels')) return []
+
+    return core
+      .getInput('labels')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
   get workDir(): string {
     return core.getInput('workDir')
   }
@@ -105,6 +121,17 @@ export class EnvOptions implements Options {
 
   get message(): string {
     return process.env.MESSAGE || ''
+  }
+
+  get title(): string {
+    return process.env.TITLE || ''
+  }
+
+  get labels(): string[] {
+    return (process.env.LABELS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
   }
 
   get repository(): string {

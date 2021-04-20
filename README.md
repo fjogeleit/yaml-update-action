@@ -64,6 +64,8 @@ jobs:
 |commitChange| Commit the change to __branch__ with the given __message__ | 'true' |
 |branch    | The updated YAML file will be commited to this branch, branch will be created if not exists | master |
 |message| Commit message for the changed YAML file | ''|
+|title| Custom title for the created Pull Request | 'Merge: {{message}}'|
+|labels| Comma separated list of labels, e.g. "feature, yaml-updates" | 'yaml-updates'|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | 'true' |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
 |token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
