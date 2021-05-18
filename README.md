@@ -1,10 +1,37 @@
 # YAML Update Action
 
-Update a single value in an existing YAML File. 
-Push this updated YAML to an existing branch or create a new branch.
-Open a PullRequest to an configurable targetBranch with a custom label "yaml-update"
+Update a single value in an existing YAML File. Push this updated YAML to an existing branch or create a new branch. Open a PullRequest to an configurable targetBranch. It is also posible to change the file locally without commiting the change.
 
-## Use Case
+
+## Use Cases
+
+### Change a local YAML file without commiting the change
+
+By default the actual file in your workspace did not change. This Action creates an in memory copy of your YAML file and sends it to GitHub via the REST API. To achieve an actual update of your local YAML file within your workflow use the following configuration:
+
+```yaml
+name: 'workflow'
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test-update-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update values.yaml
+        uses: fjogeleit/yaml-update-action@master
+        with:
+          valueFile: 'file.yaml'
+          propertyPath: 'file.version'
+          value: v1.0.1
+          commitChange: 'false'
+          updateFile: 'true'
+```
+
+### Update Helm Chart after a new Docker Image was build
 
 Update the image version configuration inside of my helm `values.yaml` after the related GitHub Workflow build and pushed a new version of my Docker Image to the GitHub Package Registry
 
