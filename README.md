@@ -33,10 +33,9 @@ jobs:
 
 ### Update Helm Chart after a new Docker Image was build
 
-Update the image version configuration inside of my helm `values.yaml` after the related GitHub Workflow build and pushed a new version of my Docker Image to the GitHub Package Registry
+Update the image version configuration inside of my helm `values.yaml` after the related GitHub Workflow build and pushed a new version of my Docker Image to the GitHub Package Registry.
 
-Basic Usage:
-```
+```yaml
 env:
   IMAGE_NAME: image
 
