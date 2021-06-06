@@ -118,7 +118,7 @@ At this point in time only string values are supported
 
 ### Advaned Example with an separate target repository
 
-```
+```yaml
 env:
   IMAGE_NAME: image
 
