@@ -73,7 +73,6 @@ jobs:
           propertyPath: 'backend.version'
           value: v1.0.1
           branch: deployment/test-multi-file-update
-          targetBranch: master
           createPR: 'false'
           message: 'Update DEV Image' 
       - uses: ./
@@ -82,7 +81,6 @@ jobs:
           propertyPath: 'backend.version'
           value: v1.0.1
           branch: deployment/test-multi-file-update
-          targetBranch: master
           createPR: 'false'
           message: 'Update STAGE Image' 
       - uses: ./
