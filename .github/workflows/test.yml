@@ -62,3 +62,36 @@ jobs:
           updateFile: 'true'
       - name: Cat Updated values.yaml
         run: cat __tests__/fixtures/values.yaml
+  
+  test-multiple-file-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.dev.yaml'
+          propertyPath: 'backend.version'
+          value: v1.0.1
+          branch: deployment/test-multi-file-update
+          targetBranch: master
+          createPR: 'false'
+          message: 'Update DEV Image' 
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.stage.yaml'
+          propertyPath: 'backend.version'
+          value: v1.0.1
+          branch: deployment/test-multi-file-update
+          targetBranch: master
+          createPR: 'false'
+          message: 'Update STAGE Image' 
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.prod.yaml'
+          propertyPath: 'backend.version'
+          value: v1.0.1
+          branch: deployment/test-multi-file-update
+          targetBranch: master
+          createPR: 'true'
+          message: 'Update PROD Image' 
+          title: 'Version Update on all Environments' 
