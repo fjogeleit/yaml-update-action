@@ -90,6 +90,6 @@ jobs:
           value: v1.0.1
           branch: deployment/test-multi-file-update
           targetBranch: master
-          createPR: 'true'
+          # createPR: 'true' // enable to create a PR for all changes
           message: 'Update PROD Image' 
           title: 'Version Update on all Environments' 
