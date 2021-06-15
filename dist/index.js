@@ -107,7 +107,7 @@ function replace(value, valuePath, content) {
 }
 exports.replace = replace;
 function convert(yamlContent) {
-    return js_yaml_1.default.dump(yamlContent);
+    return js_yaml_1.default.dump(yamlContent, { lineWidth: -1 });
 }
 exports.convert = convert;
 function writeTo(yamlString, filePath, actions) {
