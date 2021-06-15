@@ -90,7 +90,7 @@ jobs:
           value: v1.0.1
           branch: deployment/test-multi-file-update
           targetBranch: master
-          createPR: 'true' # enable to create a PR for all changes
+          # createPR: 'true' # enable to create a PR for all changes
           description: Test GitHub Action
           message: 'Update PROD Image' 
           title: 'Version Update on all Environments' 
