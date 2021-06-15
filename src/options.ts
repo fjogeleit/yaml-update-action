@@ -11,6 +11,7 @@ export interface Options {
   branch: string
   message: string
   title: string
+  description: string
   labels: string[]
   targetBranch: string
   repository: string
@@ -65,6 +66,10 @@ export class GitHubOptions implements Options {
 
   get title(): string {
     return core.getInput('title')
+  }
+
+  get description(): string {
+    return core.getInput('description')
   }
 
   get labels(): string[] {
@@ -125,6 +130,10 @@ export class EnvOptions implements Options {
 
   get title(): string {
     return process.env.TITLE || ''
+  }
+
+  get description(): string {
+    return process.env.DESCRIPTION || ''
   }
 
   get labels(): string[] {

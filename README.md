@@ -91,6 +91,7 @@ jobs:
 |branch    | The updated YAML file will be commited to this branch, branch will be created if not exists | master |
 |message| Commit message for the changed YAML file | ''|
 |title| Custom title for the created Pull Request | 'Merge: {{message}}'|
+|title| Custom description for the created Pull Request | ''|
 |labels| Comma separated list of labels, e.g. "feature, yaml-updates" | 'yaml-updates'|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | 'true' |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |

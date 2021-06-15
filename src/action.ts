@@ -52,6 +52,7 @@ ${newYamlContent}
         options.targetBranch,
         options.labels,
         options.title || `Merge: ${options.message}`,
+        options.description,
         octokit,
         actions
       )
@@ -166,6 +167,7 @@ export async function createPullRequest(
   targetBranch: string,
   labels: string[],
   title: string,
+  description: string,
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
@@ -176,7 +178,8 @@ export async function createPullRequest(
     repo,
     title,
     head: branch,
-    base: targetBranch
+    base: targetBranch,
+    body: description
   })
 
   actions.debug(`Create PR: #${response.data.id}`)

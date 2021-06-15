@@ -39,6 +39,10 @@ inputs:
     required: false
     description: 'Title of the created pull request'
     default: ''
+  description:
+    required: false
+    description: 'Description of the created pull request'
+    default: ''
   labels:
     required: false
     description: 'Comma separated list of custom PR labels, e.g. "feature,yaml-updates"'
