@@ -118,7 +118,7 @@ export function replace<T extends YamlNode>(value: string | number | boolean, va
 }
 
 export function convert(yamlContent: YamlNode): string {
-  return YAML.dump(yamlContent)
+  return YAML.dump(yamlContent, {lineWidth: -1})
 }
 
 export function writeTo(yamlString: string, filePath: string, actions: Actions): void {
