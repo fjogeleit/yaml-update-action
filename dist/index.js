@@ -52,7 +52,7 @@ ${newYamlContent}
             };
             yield gitProcessing(options.repository, options.branch, file, options.message, octokit, actions);
             if (options.createPR) {
-                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, octokit, actions);
+                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, octokit, actions);
             }
         }
         catch (error) {
@@ -135,7 +135,7 @@ function gitProcessing(repository, branch, file, commitMessage, octokit, actions
     });
 }
 exports.gitProcessing = gitProcessing;
-function createPullRequest(repository, branch, targetBranch, labels, title, octokit, actions) {
+function createPullRequest(repository, branch, targetBranch, labels, title, description, octokit, actions) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = git_commands_1.repositoryInformation(repository);
         const response = yield octokit.pulls.create({
@@ -143,7 +143,8 @@ function createPullRequest(repository, branch, targetBranch, labels, title, octo
             repo,
             title,
             head: branch,
-            base: targetBranch
+            base: targetBranch,
+            body: description
         });
         actions.debug(`Create PR: #${response.data.id}`);
         actions.setOutput('pull_request', JSON.stringify(response.data));
@@ -404,6 +405,9 @@ class GitHubOptions {
     get title() {
         return core.getInput('title');
     }
+    get description() {
+        return core.getInput('description');
+    }
     get labels() {
         if (!core.getInput('labels'))
             return [];
@@ -451,6 +455,9 @@ class EnvOptions {
     }
     get title() {
         return process.env.TITLE || '';
+    }
+    get description() {
+        return process.env.DESCRIPTION || '';
     }
     get labels() {
         return (process.env.LABELS || '')
