@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",
-    "@types/js-yaml": "^4.0.1",
+    "@types/js-yaml": "^4.0.2",
     "@types/node": "^16.0.0",
     "@typescript-eslint/parser": "^4.28.2",
     "@vercel/ncc": "^0.28.6",
