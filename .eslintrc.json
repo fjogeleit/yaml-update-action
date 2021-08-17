@@ -12,6 +12,8 @@
       "import/no-namespace": "off",
       "no-unused-vars": "off",
       "github/no-then": "off",
+      "i18n-text/no-en": "off",
+      "sort-imports": "off",
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/explicit-member-accessibility": ["error", {"accessibility": "no-public"}],
       "@typescript-eslint/no-require-imports": "error",

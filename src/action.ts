@@ -4,7 +4,7 @@ import path from 'path'
 import {Options} from './options'
 import {Octokit} from '@octokit/rest'
 import {Actions} from './github-actions'
-import {ChangedFile, repositoryInformation, currentCommit, createBlobForFile, createNewCommit, createNewTree, updateBranch} from './git-commands'
+import {ChangedFile, createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
 
 export type YamlNode = {[key: string]: string | number | boolean | YamlNode}
 
