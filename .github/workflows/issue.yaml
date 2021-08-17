@@ -20,3 +20,4 @@ jobs:
           branch: development
           message: 'TRIGGERED_LOAD_ENV' 
           commitChange: true
+          token: ${{ secrets.CUSTOM_TOKEN }}
