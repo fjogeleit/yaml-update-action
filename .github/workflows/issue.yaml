@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Update environment
-        uses: fjogeleit/yaml-update-action@master
+        uses: ./
         with:
           valueFile: '__tests__/fixtures/values.prod.yaml'
           propertyPath: 'backend.version'
