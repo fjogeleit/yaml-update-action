@@ -9,6 +9,7 @@ export interface Options {
   commitChange: boolean
   updateFile: boolean
   branch: string
+  masterBranchName: string
   message: string
   title: string
   description: string
@@ -85,6 +86,10 @@ export class GitHubOptions implements Options {
   get workDir(): string {
     return core.getInput('workDir')
   }
+
+  get masterBranchName(): string {
+    return core.getInput('masterBranchName')
+  }
 }
 
 export class EnvOptions implements Options {
@@ -102,6 +107,10 @@ export class EnvOptions implements Options {
 
   get branch(): string {
     return process.env.BRANCH || ''
+  }
+
+  get masterBranchName(): string {
+    return process.env.MASTER_BRANCH_NAME || ''
   }
 
   get commitChange(): boolean {

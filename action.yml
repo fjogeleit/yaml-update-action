@@ -15,6 +15,10 @@ inputs:
     required: false
     description: 'Branch to commit the change, will be created if not exist'
     default: 'master'
+  masterBranchName:
+    required: false
+    description: 'Branch name of your master'
+    default: 'master'
   targetBranch:
     required: false
     description: 'Target Branch for the created PullRequest'
@@ -49,11 +53,11 @@ inputs:
     default: 'yaml-updates'
   token:
     required: false
-    description: 'GitHub AuthToken for Athorization'
+    description: 'GitHub AuthToken for Authorization'
     default: ${{ github.token }}
   repository:
     required: false
-    description: 'repoistory to update'
+    description: 'repository to update'
     default: ${{ github.repository }}
   workDir:
     required: false
