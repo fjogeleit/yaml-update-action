@@ -98,6 +98,7 @@ jobs:
 |token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
 |updateFile| By default the actual file is not updated, to do so set this property to 'true' | false |
 |workDir| relative location of the configured `repository` | . |
+|masterBranchName| Branch name of your master branch | `master` |
 
 ### Output
 
