@@ -43,7 +43,7 @@ ${newYamlContent}
       content: newYamlContent
     }
 
-    await gitProcessing(options.repository, options.branch, file, options.message, octokit, actions)
+    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions)
 
     if (options.createPR) {
       await createPullRequest(
@@ -133,13 +133,14 @@ export function writeTo(yamlString: string, filePath: string, actions: Actions):
 export async function gitProcessing(
   repository: string,
   branch: string,
+  masterBranchName: string,
   file: ChangedFile,
   commitMessage: string,
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
   const {owner, repo} = repositoryInformation(repository)
-  const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch)
+  const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch, masterBranchName)
 
   actions.debug(JSON.stringify({baseCommit: commitSha, baseTree: treeSha}))
 
