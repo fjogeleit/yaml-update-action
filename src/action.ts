@@ -58,7 +58,7 @@ ${newYamlContent}
       )
     }
   } catch (error) {
-    actions.setFailed(error)
+    actions.setFailed((error as Error).toString())
     return
   }
 }

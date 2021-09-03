@@ -20,7 +20,13 @@ export type RepositoryInformation = {
   repo: string
 }
 
-export const currentCommit = async (octo: Octokit, org: string, repo: string, branch: string, masterBranchName: string): Promise<{commitSha: string; treeSha: string}> => {
+export const currentCommit = async (
+  octo: Octokit,
+  org: string,
+  repo: string,
+  branch: string,
+  masterBranchName: string
+): Promise<{commitSha: string; treeSha: string}> => {
   let commitSha = ''
   try {
     const {data: refData} = await octo.git.getRef({
