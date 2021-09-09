@@ -26,6 +26,11 @@ export async function run(options: Options, actions: Actions): Promise<void> {
     
 ${newYamlContent}
 `)
+    // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
+    if (yamlContent === result) {
+      actions.debug(`Nothing changed, skipping rest of the workflow.`)
+      return
+    }
 
     if (options.updateFile === true) {
       writeTo(newYamlContent, filePath, actions)
