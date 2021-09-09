@@ -38,6 +38,11 @@ function run(options, actions) {
     
 ${newYamlContent}
 `);
+            // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
+            if (yamlContent === result) {
+                actions.debug(`Nothing changed, skipping rest of the workflow.`);
+                return;
+            }
             if (options.updateFile === true) {
                 writeTo(newYamlContent, filePath, actions);
             }
@@ -1639,22 +1644,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 var request = __nccwpck_require__(6234);
 var universalUserAgent = __nccwpck_require__(5030);
 
-const VERSION = "4.8.0";
+const VERSION = "4.6.4";
 
-function _buildMessageForResponseErrors(data) {
-  return `Request failed due to following response errors:\n` + data.errors.map(e => ` - ${e.message}`).join("\n");
-}
-
-class GraphqlResponseError extends Error {
-  constructor(request, headers, response) {
-    super(_buildMessageForResponseErrors(response));
-    this.request = request;
-    this.headers = headers;
-    this.response = response;
-    this.name = "GraphqlResponseError"; // Expose the errors and response data in their shorthand properties.
-
-    this.errors = response.errors;
-    this.data = response.data; // Maintains proper stack trace (only available on V8)
+class GraphqlError extends Error {
+  constructor(request, response) {
+    const message = response.data.errors[0].message;
+    super(message);
+    Object.assign(this, response.data);
+    Object.assign(this, {
+      headers: response.headers
+    });
+    this.name = "GraphqlError";
+    this.request = request; // Maintains proper stack trace (only available on V8)
 
     /* istanbul ignore next */
 
@@ -1712,7 +1713,10 @@ function graphql(request, query, options) {
         headers[key] = response.headers[key];
       }
 
-      throw new GraphqlResponseError(requestOptions, headers, response.data);
+      throw new GraphqlError(requestOptions, {
+        headers,
+        data: response.data
+      });
     }
 
     return response.data.data;
@@ -1746,7 +1750,6 @@ function withCustomRequest(customRequest) {
   });
 }
 
-exports.GraphqlResponseError = GraphqlResponseError;
 exports.graphql = graphql$1;
 exports.withCustomRequest = withCustomRequest;
 //# sourceMappingURL=index.js.map
