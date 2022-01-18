@@ -1,4 +1,9 @@
 backend:
   version: v1.2.0
-frontent: false
+frontend: {}
+containers:
+  - name: nginx
+    image: nginx:latest
+  - name: node
+    image: node:latest
 config: {}
