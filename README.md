@@ -84,7 +84,7 @@ jobs:
 |Argument  |  Description  |  Default  |
 |----------|---------------|-----------|
 |valueFile | relative path from the Workspace Directory| _required_ Field |
-|propertyPath| PropertyPath for the new value | _required_ Field |
+|propertyPath| PropertyPath for the new value, JSONPath supported | _required_ Field |
 |value  | New value for the related PropertyPath| _required_ Field |
 |repository| The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{github.repository}} |
 |commitChange| Commit the change to __branch__ with the given __message__ | true |

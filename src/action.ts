@@ -1,12 +1,13 @@
 import YAML from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
+import jp from 'jsonpath'
 import {Options} from './options'
 import {Octokit} from '@octokit/rest'
 import {Actions} from './github-actions'
 import {ChangedFile, createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
 
-export type YamlNode = {[key: string]: string | number | boolean | YamlNode}
+export type YamlNode = {[key: string]: string | number | boolean | YamlNode | YamlNode[]}
 
 export async function run(options: Options, actions: Actions): Promise<void> {
   const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
@@ -93,34 +94,16 @@ export function parseFile<T extends YamlNode>(filePath: string): T {
   return result
 }
 
-export function replace<T extends YamlNode>(value: string | number | boolean, valuePath: string, content: YamlNode): T {
-  const contentCopy = JSON.parse(JSON.stringify(content))
-  let scope: YamlNode = contentCopy
-  let level = 0
+export function replace<T extends YamlNode>(value: string | number | boolean, jsonPath: string, content: YamlNode): T {
+  const copy = JSON.parse(JSON.stringify(content))
 
-  const yamlPath = valuePath.split('.')
-
-  for (const key of yamlPath) {
-    level++
-
-    if (typeof scope[key] !== 'object' && level !== yamlPath.length) {
-      throw new Error(`invalid property path - ${key} is not an object`)
-    }
-
-    if (false === scope.hasOwnProperty(key)) {
-      scope[key] = {}
-    }
-
-    if (level !== yamlPath.length) {
-      scope = scope[key] as YamlNode
-    }
-
-    if (level === yamlPath.length) {
-      scope[key] = value
-    }
+  if (!jsonPath.startsWith('$')) {
+    jsonPath = `$.${jsonPath}`
   }
 
-  return contentCopy
+  jp.value(copy, jsonPath, value)
+
+  return copy
 }
 
 export function convert(yamlContent: YamlNode): string {

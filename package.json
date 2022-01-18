@@ -26,11 +26,13 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.6.0",
-    "@octokit/rest": "~18.12.0"
+    "@octokit/rest": "~18.12.0",
+    "jsonpath": "^1.1.1"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/js-yaml": "^4.0.5",
+    "@types/jsonpath": "^0.2.0",
     "@types/node": "^17.0.9",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
