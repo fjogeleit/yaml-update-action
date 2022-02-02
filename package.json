@@ -33,7 +33,7 @@
     "@types/jest": "^27.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/jsonpath": "^0.2.0",
-    "@types/node": "^17.0.13",
+    "@types/node": "^17.0.14",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",
     "@vercel/ncc": "^0.33.1",
