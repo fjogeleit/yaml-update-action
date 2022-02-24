@@ -30,7 +30,7 @@
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
-    "@types/jest": "^27.4.0",
+    "@types/jest": "^27.4.1",
     "@types/js-yaml": "^4.0.5",
     "@types/jsonpath": "^0.2.0",
     "@types/node": "^17.0.21",
