@@ -14,7 +14,7 @@ name: 'workflow'
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   test-update-file:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Update values.yaml
-        uses: fjogeleit/yaml-update-action@master
+        uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'file.yaml'
           propertyPath: 'file.version'
@@ -60,7 +60,7 @@ jobs:
           # Strip "v" prefix from tag name
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=$(echo ${{ github.sha }} | cut -c1-8)
+          [ "$VERSION" == "main" ] && VERSION=$(echo ${{ github.sha }} | cut -c1-8)
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
           docker tag image $IMAGE_ID:$VERSION
@@ -68,7 +68,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
 
       - name: Update Image Version in the related HelmChart values.yaml
-        uses: fjogeleit/yaml-update-action@master
+        uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
           propertyPath: 'backend.version'
@@ -154,7 +154,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }} 
 
       - name: Update Image Version in the related HelmChart values.yaml
-        uses: fjogeleit/yaml-update-action@master
+        uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
           propertyPath: 'backend.version'
