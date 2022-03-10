@@ -2,11 +2,11 @@ name: 'build-test'
 on:
   push:
     branches:
-      - master
+      - main
       - development
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build: 
@@ -27,7 +27,7 @@ jobs:
           propertyPath: 'backend.version'
           value: v1.0.1
           branch: deployment/v1.0.1
-          targetBranch: master
+          targetBranch: main
           createPR: 'false'
           message: 'Update Image Version to v1.0.1' 
 
@@ -44,7 +44,7 @@ jobs:
           propertyPath: 'backend.version'
           value: v1.2.1
           branch: deployment/v1.2.1
-          targetBranch: master
+          targetBranch: main
           createPR: 'false'
           message: 'Update Image Version to v1.2.1' 
           workDir: infrastructure
@@ -92,7 +92,7 @@ jobs:
           propertyPath: 'backend.version'
           value: v1.0.1
           branch: deployment/test-multi-file-update
-          targetBranch: master
+          targetBranch: main
           # createPR: 'true' # enable to create a PR for all changes
           description: Test GitHub Action
           message: 'Update PROD Image' 

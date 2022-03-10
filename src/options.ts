@@ -16,6 +16,7 @@ export interface Options {
   labels: string[]
   targetBranch: string
   repository: string
+  githubAPI: string
   createPR: boolean
   workDir: string
 }
@@ -51,6 +52,10 @@ export class GitHubOptions implements Options {
 
   get repository(): string {
     return core.getInput('repository')
+  }
+
+  get githubAPI(): string {
+    return core.getInput('githubAPI')
   }
 
   get createPR(): boolean {
@@ -154,6 +159,10 @@ export class EnvOptions implements Options {
 
   get repository(): string {
     return process.env.REPOSITORY || ''
+  }
+
+  get githubAPI(): string {
+    return process.env.GITHUB_API || 'https://api.github.com'
   }
 
   get workDir(): string {

@@ -23,6 +23,10 @@ inputs:
     required: false
     description: 'Target Branch for the created PullRequest'
     default: master
+  githubAPI:
+    required: false
+    description: 'GitHub BaseURL'
+    default: https://api.github.com
   createPR:
     required: false
     description: 'Create a PullRequest to the configured target branch'
