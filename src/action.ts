@@ -41,7 +41,7 @@ ${newYamlContent}
       return
     }
 
-    const octokit = new Octokit({auth: options.token})
+    const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
 
     const file: ChangedFile = {
       relativePath: options.valueFile,

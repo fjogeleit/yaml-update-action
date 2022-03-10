@@ -1,6 +1,6 @@
 # YAML Update Action
 
-Update a single value in an existing YAML File. Push this updated YAML to an existing branch or create a new branch. Open a PullRequest to an configurable targetBranch. It is also posible to change the file locally without commiting the change.
+Update a single value in an existing YAML File. Push this updated YAML to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
 
 
 ## Use Cases
@@ -95,6 +95,7 @@ jobs:
 |labels| Comma separated list of labels, e.g. "feature, yaml-updates" | 'yaml-updates'|
 |createPR| Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it | true |
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
+|githubAPI| BaseURL for all GitHub REST API requests | https://api.github.com |
 |token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
 |updateFile| By default the actual file is not updated, to do so set this property to 'true' | false |
 |workDir| relative location of the configured `repository` | . |

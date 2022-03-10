@@ -50,7 +50,7 @@ ${newYamlContent}
             if (options.commitChange === false) {
                 return;
             }
-            const octokit = new rest_1.Octokit({ auth: options.token });
+            const octokit = new rest_1.Octokit({ auth: options.token, baseUrl: options.githubAPI });
             const file = {
                 relativePath: options.valueFile,
                 absolutePath: filePath,
@@ -393,6 +393,9 @@ class GitHubOptions {
     get repository() {
         return core.getInput('repository');
     }
+    get githubAPI() {
+        return core.getInput('githubAPI');
+    }
     get createPR() {
         return core.getInput('createPR') === 'true';
     }
@@ -473,6 +476,9 @@ class EnvOptions {
     }
     get repository() {
         return process.env.REPOSITORY || '';
+    }
+    get githubAPI() {
+        return process.env.GITHUB_API || 'https://api.github.com';
     }
     get workDir() {
         return process.env.WORK_DIR || '.';
