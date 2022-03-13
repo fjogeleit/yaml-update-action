@@ -67,6 +67,14 @@ inputs:
     required: false
     description: 'repository workspace location'
     default: .
+  commitUserName:
+    description: Name used for the commit user
+    required: false
+    default: GitHub Actions
+  commitUserEmail:
+    description: Email address used for the commit user
+    required: false
+    default: actions@github.com
 runs:
   using: 'node16'
   main: 'dist/index.js'

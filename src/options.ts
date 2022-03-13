@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as process from 'process'
+import {Committer} from './committer'
 
 export interface Options {
   valueFile: string
@@ -19,6 +20,7 @@ export interface Options {
   githubAPI: string
   createPR: boolean
   workDir: string
+  committer: Committer
 }
 
 export class GitHubOptions implements Options {
@@ -95,6 +97,13 @@ export class GitHubOptions implements Options {
   get masterBranchName(): string {
     return core.getInput('masterBranchName')
   }
+
+  get committer(): Committer {
+    return {
+      name: core.getInput('commitUserName'),
+      email: core.getInput('commitUserEmail')
+    }
+  }
 }
 
 export class EnvOptions implements Options {
@@ -167,5 +176,12 @@ export class EnvOptions implements Options {
 
   get workDir(): string {
     return process.env.WORK_DIR || '.'
+  }
+
+  get committer(): Committer {
+    return {
+      name: process.env.COMMIT_USER_NAME || '',
+      email: process.env.COMMIT_USER_EMAIL || ''
+    }
   }
 }

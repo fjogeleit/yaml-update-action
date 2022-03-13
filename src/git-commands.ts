@@ -1,4 +1,5 @@
 import {Octokit} from '@octokit/rest'
+import {Committer} from './committer'
 
 export type ChangedFile = {
   absolutePath: string
@@ -99,14 +100,16 @@ export const createNewCommit = async (
   repo: string,
   message: string,
   treeSha: string,
-  commitSha: string
+  commitSha: string,
+  author: Committer
 ): Promise<string> => {
   const {data} = await octo.git.createCommit({
     owner,
     repo,
     message,
     tree: treeSha,
-    parents: [commitSha]
+    parents: [commitSha],
+    author
   })
 
   if (!data?.sha) {
