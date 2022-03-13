@@ -56,7 +56,7 @@ ${newYamlContent}
                 absolutePath: filePath,
                 content: newYamlContent
             };
-            yield gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions);
+            yield gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer);
             if (options.createPR) {
                 yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, octokit, actions);
             }
@@ -110,7 +110,7 @@ function writeTo(yamlString, filePath, actions) {
     });
 }
 exports.writeTo = writeTo;
-function gitProcessing(repository, branch, masterBranchName, file, commitMessage, octokit, actions) {
+function gitProcessing(repository, branch, masterBranchName, file, commitMessage, octokit, actions, committer) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = (0, git_commands_1.repositoryInformation)(repository);
         const { commitSha, treeSha } = yield (0, git_commands_1.currentCommit)(octokit, owner, repo, branch, masterBranchName);
@@ -119,7 +119,7 @@ function gitProcessing(repository, branch, masterBranchName, file, commitMessage
         actions.debug(JSON.stringify({ fileBlob: file.sha }));
         const newTreeSha = yield (0, git_commands_1.createNewTree)(octokit, owner, repo, file, treeSha);
         actions.debug(JSON.stringify({ createdTree: newTreeSha }));
-        const newCommitSha = yield (0, git_commands_1.createNewCommit)(octokit, owner, repo, commitMessage, newTreeSha, commitSha);
+        const newCommitSha = yield (0, git_commands_1.createNewCommit)(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer);
         actions.debug(JSON.stringify({ createdCommit: newCommitSha }));
         actions.setOutput('commit', newCommitSha);
         yield (0, git_commands_1.updateBranch)(octokit, owner, repo, branch, newCommitSha);
@@ -228,13 +228,14 @@ const createNewTree = (octo, owner, repo, file, parentTreeSha) => __awaiter(void
     return data.sha;
 });
 exports.createNewTree = createNewTree;
-const createNewCommit = (octo, owner, repo, message, treeSha, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+const createNewCommit = (octo, owner, repo, message, treeSha, commitSha, author) => __awaiter(void 0, void 0, void 0, function* () {
     const { data } = yield octo.git.createCommit({
         owner,
         repo,
         message,
         tree: treeSha,
-        parents: [commitSha]
+        parents: [commitSha],
+        author
     });
     if (!(data === null || data === void 0 ? void 0 : data.sha)) {
         throw Error('Failed to create commit');
@@ -426,6 +427,12 @@ class GitHubOptions {
     get masterBranchName() {
         return core.getInput('masterBranchName');
     }
+    get committer() {
+        return {
+            name: core.getInput('commitUserName'),
+            email: core.getInput('commitUserEmail')
+        };
+    }
 }
 exports.GitHubOptions = GitHubOptions;
 class EnvOptions {
@@ -482,6 +489,12 @@ class EnvOptions {
     }
     get workDir() {
         return process.env.WORK_DIR || '.';
+    }
+    get committer() {
+        return {
+            name: process.env.COMMIT_USER_NAME || '',
+            email: process.env.COMMIT_USER_EMAIL || ''
+        };
     }
 }
 exports.EnvOptions = EnvOptions;
