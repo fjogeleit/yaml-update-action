@@ -56,9 +56,9 @@ ${newYamlContent}
                 absolutePath: filePath,
                 content: newYamlContent
             };
-            yield gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions);
+            yield gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer);
             if (options.createPR) {
-                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, octokit, actions);
+                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, options.reviewers, options.teamReviewers, options.assignees, octokit, actions);
             }
         }
         catch (error) {
@@ -110,7 +110,7 @@ function writeTo(yamlString, filePath, actions) {
     });
 }
 exports.writeTo = writeTo;
-function gitProcessing(repository, branch, masterBranchName, file, commitMessage, octokit, actions) {
+function gitProcessing(repository, branch, masterBranchName, file, commitMessage, octokit, actions, committer) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = (0, git_commands_1.repositoryInformation)(repository);
         const { commitSha, treeSha } = yield (0, git_commands_1.currentCommit)(octokit, owner, repo, branch, masterBranchName);
@@ -119,7 +119,7 @@ function gitProcessing(repository, branch, masterBranchName, file, commitMessage
         actions.debug(JSON.stringify({ fileBlob: file.sha }));
         const newTreeSha = yield (0, git_commands_1.createNewTree)(octokit, owner, repo, file, treeSha);
         actions.debug(JSON.stringify({ createdTree: newTreeSha }));
-        const newCommitSha = yield (0, git_commands_1.createNewCommit)(octokit, owner, repo, commitMessage, newTreeSha, commitSha);
+        const newCommitSha = yield (0, git_commands_1.createNewCommit)(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer);
         actions.debug(JSON.stringify({ createdCommit: newCommitSha }));
         actions.setOutput('commit', newCommitSha);
         yield (0, git_commands_1.updateBranch)(octokit, owner, repo, branch, newCommitSha);
@@ -127,7 +127,7 @@ function gitProcessing(repository, branch, masterBranchName, file, commitMessage
     });
 }
 exports.gitProcessing = gitProcessing;
-function createPullRequest(repository, branch, targetBranch, labels, title, description, octokit, actions) {
+function createPullRequest(repository, branch, targetBranch, labels, title, description, reviewers, teamReviewers, assignees, octokit, actions) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = (0, git_commands_1.repositoryInformation)(repository);
         const response = yield octokit.pulls.create({
@@ -146,6 +146,25 @@ function createPullRequest(repository, branch, targetBranch, labels, title, desc
             issue_number: response.data.number,
             labels
         });
+        if (assignees.length) {
+            octokit.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: response.data.number,
+                assignees
+            });
+            actions.debug(`Add Assignees: ${assignees.join(', ')}`);
+        }
+        if (reviewers.length || teamReviewers.length) {
+            octokit.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: response.data.number,
+                reviewers,
+                team_reviewers: teamReviewers
+            });
+            actions.debug(`Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`);
+        }
         actions.debug(`Add Label: ${labels.join(', ')}`);
     });
 }
@@ -228,13 +247,14 @@ const createNewTree = (octo, owner, repo, file, parentTreeSha) => __awaiter(void
     return data.sha;
 });
 exports.createNewTree = createNewTree;
-const createNewCommit = (octo, owner, repo, message, treeSha, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+const createNewCommit = (octo, owner, repo, message, treeSha, commitSha, author) => __awaiter(void 0, void 0, void 0, function* () {
     const { data } = yield octo.git.createCommit({
         owner,
         repo,
         message,
         tree: treeSha,
-        parents: [commitSha]
+        parents: [commitSha],
+        author
     });
     if (!(data === null || data === void 0 ? void 0 : data.sha)) {
         throw Error('Failed to create commit');
@@ -420,11 +440,44 @@ class GitHubOptions {
             .map(label => label.trim())
             .filter(label => !!label);
     }
+    get reviewers() {
+        if (!core.getInput('reviewers'))
+            return [];
+        return core
+            .getInput('reviewers')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
+    get teamReviewers() {
+        if (!core.getInput('teamReviewers'))
+            return [];
+        return core
+            .getInput('teamReviewers')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
+    get assignees() {
+        if (!core.getInput('assignees'))
+            return [];
+        return core
+            .getInput('assignees')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
     get workDir() {
         return core.getInput('workDir');
     }
     get masterBranchName() {
         return core.getInput('masterBranchName');
+    }
+    get committer() {
+        return {
+            name: core.getInput('commitUserName'),
+            email: core.getInput('commitUserEmail')
+        };
     }
 }
 exports.GitHubOptions = GitHubOptions;
@@ -474,6 +527,24 @@ class EnvOptions {
             .map(label => label.trim())
             .filter(label => !!label);
     }
+    get reviewers() {
+        return (process.env.REVIEWERS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
+    get teamReviewers() {
+        return (process.env.TEAM_REVIEWERS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
+    get assignees() {
+        return (process.env.ASSIGNEES || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
     get repository() {
         return process.env.REPOSITORY || '';
     }
@@ -482,6 +553,12 @@ class EnvOptions {
     }
     get workDir() {
         return process.env.WORK_DIR || '.';
+    }
+    get committer() {
+        return {
+            name: process.env.COMMIT_USER_NAME || '',
+            email: process.env.COMMIT_USER_EMAIL || ''
+        };
     }
 }
 exports.EnvOptions = EnvOptions;

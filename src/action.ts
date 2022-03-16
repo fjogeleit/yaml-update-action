@@ -6,6 +6,7 @@ import {Options} from './options'
 import {Octokit} from '@octokit/rest'
 import {Actions} from './github-actions'
 import {ChangedFile, createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
+import {Committer} from './committer'
 
 export type YamlNode = {[key: string]: string | number | boolean | YamlNode | YamlNode[]}
 
@@ -49,7 +50,7 @@ ${newYamlContent}
       content: newYamlContent
     }
 
-    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions)
+    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer)
 
     if (options.createPR) {
       await createPullRequest(
@@ -59,6 +60,9 @@ ${newYamlContent}
         options.labels,
         options.title || `Merge: ${options.message}`,
         options.description,
+        options.reviewers,
+        options.teamReviewers,
+        options.assignees,
         octokit,
         actions
       )
@@ -125,7 +129,8 @@ export async function gitProcessing(
   file: ChangedFile,
   commitMessage: string,
   octokit: Octokit,
-  actions: Actions
+  actions: Actions,
+  committer: Committer
 ): Promise<void> {
   const {owner, repo} = repositoryInformation(repository)
   const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch, masterBranchName)
@@ -140,7 +145,7 @@ export async function gitProcessing(
 
   actions.debug(JSON.stringify({createdTree: newTreeSha}))
 
-  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha)
+  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer)
 
   actions.debug(JSON.stringify({createdCommit: newCommitSha}))
   actions.setOutput('commit', newCommitSha)
@@ -157,6 +162,9 @@ export async function createPullRequest(
   labels: string[],
   title: string,
   description: string,
+  reviewers: string[],
+  teamReviewers: string[],
+  assignees: string[],
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
@@ -181,6 +189,29 @@ export async function createPullRequest(
     issue_number: response.data.number,
     labels
   })
+
+  if (assignees.length) {
+    octokit.issues.addAssignees({
+      owner,
+      repo,
+      issue_number: response.data.number,
+      assignees
+    })
+
+    actions.debug(`Add Assignees: ${assignees.join(', ')}`)
+  }
+
+  if (reviewers.length || teamReviewers.length) {
+    octokit.pulls.requestReviewers({
+      owner,
+      repo,
+      pull_number: response.data.number,
+      reviewers,
+      team_reviewers: teamReviewers
+    })
+
+    actions.debug(`Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`)
+  }
 
   actions.debug(`Add Label: ${labels.join(', ')}`)
 }

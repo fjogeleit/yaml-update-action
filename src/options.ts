@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as process from 'process'
+import {Committer} from './committer'
 
 export interface Options {
   valueFile: string
@@ -14,11 +15,15 @@ export interface Options {
   title: string
   description: string
   labels: string[]
+  reviewers: string[]
+  teamReviewers: string[]
+  assignees: string[]
   targetBranch: string
   repository: string
   githubAPI: string
   createPR: boolean
   workDir: string
+  committer: Committer
 }
 
 export class GitHubOptions implements Options {
@@ -88,12 +93,49 @@ export class GitHubOptions implements Options {
       .filter(label => !!label)
   }
 
+  get reviewers(): string[] {
+    if (!core.getInput('reviewers')) return []
+
+    return core
+      .getInput('reviewers')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
+  get teamReviewers(): string[] {
+    if (!core.getInput('teamReviewers')) return []
+
+    return core
+      .getInput('teamReviewers')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
+  get assignees(): string[] {
+    if (!core.getInput('assignees')) return []
+
+    return core
+      .getInput('assignees')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
   get workDir(): string {
     return core.getInput('workDir')
   }
 
   get masterBranchName(): string {
     return core.getInput('masterBranchName')
+  }
+
+  get committer(): Committer {
+    return {
+      name: core.getInput('commitUserName'),
+      email: core.getInput('commitUserEmail')
+    }
   }
 }
 
@@ -157,6 +199,27 @@ export class EnvOptions implements Options {
       .filter(label => !!label)
   }
 
+  get reviewers(): string[] {
+    return (process.env.REVIEWERS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
+  get teamReviewers(): string[] {
+    return (process.env.TEAM_REVIEWERS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
+  get assignees(): string[] {
+    return (process.env.ASSIGNEES || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
   get repository(): string {
     return process.env.REPOSITORY || ''
   }
@@ -167,5 +230,12 @@ export class EnvOptions implements Options {
 
   get workDir(): string {
     return process.env.WORK_DIR || '.'
+  }
+
+  get committer(): Committer {
+    return {
+      name: process.env.COMMIT_USER_NAME || '',
+      email: process.env.COMMIT_USER_EMAIL || ''
+    }
   }
 }
