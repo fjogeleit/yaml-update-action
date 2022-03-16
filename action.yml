@@ -75,6 +75,18 @@ inputs:
     description: Email address used for the commit user
     required: false
     default: actions@github.com
+  reviewers:
+    description: List of reviewers for the created Pull Request, if enabled
+    required: false
+    default: ''
+  teanReviewers:
+    description: List of team reviewers for the created Pull Request, if enabled
+    required: false
+    default: ''
+  assignees:
+    description: List of assignees for the created Pull Request, if enabled
+    required: false
+    default: ''
 runs:
   using: 'node16'
   main: 'dist/index.js'

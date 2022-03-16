@@ -58,7 +58,7 @@ ${newYamlContent}
             };
             yield gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer);
             if (options.createPR) {
-                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, octokit, actions);
+                yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, options.reviewers, options.teamReviewers, options.assignees, octokit, actions);
             }
         }
         catch (error) {
@@ -127,7 +127,7 @@ function gitProcessing(repository, branch, masterBranchName, file, commitMessage
     });
 }
 exports.gitProcessing = gitProcessing;
-function createPullRequest(repository, branch, targetBranch, labels, title, description, octokit, actions) {
+function createPullRequest(repository, branch, targetBranch, labels, title, description, reviewers, teamReviewers, assignees, octokit, actions) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = (0, git_commands_1.repositoryInformation)(repository);
         const response = yield octokit.pulls.create({
@@ -146,6 +146,25 @@ function createPullRequest(repository, branch, targetBranch, labels, title, desc
             issue_number: response.data.number,
             labels
         });
+        if (assignees.length) {
+            octokit.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: response.data.number,
+                assignees
+            });
+            actions.debug(`Add Assignees: ${assignees.join(', ')}`);
+        }
+        if (reviewers.length || teamReviewers.length) {
+            octokit.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: response.data.number,
+                reviewers,
+                team_reviewers: teamReviewers
+            });
+            actions.debug(`Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`);
+        }
         actions.debug(`Add Label: ${labels.join(', ')}`);
     });
 }
@@ -421,6 +440,33 @@ class GitHubOptions {
             .map(label => label.trim())
             .filter(label => !!label);
     }
+    get reviewers() {
+        if (!core.getInput('reviewers'))
+            return [];
+        return core
+            .getInput('reviewers')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
+    get teamReviewers() {
+        if (!core.getInput('teamReviewers'))
+            return [];
+        return core
+            .getInput('teamReviewers')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
+    get assignees() {
+        if (!core.getInput('assignees'))
+            return [];
+        return core
+            .getInput('assignees')
+            .split(',')
+            .map(value => value.trim())
+            .filter(label => !!label);
+    }
     get workDir() {
         return core.getInput('workDir');
     }
@@ -477,6 +523,24 @@ class EnvOptions {
     }
     get labels() {
         return (process.env.LABELS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
+    get reviewers() {
+        return (process.env.REVIEWERS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
+    get teamReviewers() {
+        return (process.env.TEAM_REVIEWERS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => !!label);
+    }
+    get assignees() {
+        return (process.env.ASSIGNEES || '')
             .split(',')
             .map(label => label.trim())
             .filter(label => !!label);

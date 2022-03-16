@@ -60,6 +60,9 @@ ${newYamlContent}
         options.labels,
         options.title || `Merge: ${options.message}`,
         options.description,
+        options.reviewers,
+        options.teamReviewers,
+        options.assignees,
         octokit,
         actions
       )
@@ -159,6 +162,9 @@ export async function createPullRequest(
   labels: string[],
   title: string,
   description: string,
+  reviewers: string[],
+  teamReviewers: string[],
+  assignees: string[],
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
@@ -183,6 +189,29 @@ export async function createPullRequest(
     issue_number: response.data.number,
     labels
   })
+
+  if (assignees.length) {
+    octokit.issues.addAssignees({
+      owner,
+      repo,
+      issue_number: response.data.number,
+      assignees
+    })
+
+    actions.debug(`Add Assignees: ${assignees.join(', ')}`)
+  }
+
+  if (reviewers.length || teamReviewers.length) {
+    octokit.pulls.requestReviewers({
+      owner,
+      repo,
+      pull_number: response.data.number,
+      reviewers,
+      team_reviewers: teamReviewers
+    })
+
+    actions.debug(`Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`)
+  }
 
   actions.debug(`Add Label: ${labels.join(', ')}`)
 }
