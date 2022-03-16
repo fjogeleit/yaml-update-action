@@ -29,7 +29,8 @@ jobs:
           branch: deployment/v1.0.1
           targetBranch: main
           createPR: 'false'
-          message: 'Update Image Version to v1.0.1' 
+          message: 'Update Image Version to v1.0.1'
+          token: ${{ secrets.GH_TOKEN }}
 
   test-target-repository:
     runs-on: ubuntu-latest
@@ -48,6 +49,7 @@ jobs:
           createPR: 'false'
           message: 'Update Image Version to v1.2.1' 
           workDir: infrastructure
+          token: ${{ secrets.GH_TOKEN }}
 
   test-update-file:
     runs-on: ubuntu-latest
@@ -77,7 +79,8 @@ jobs:
           value: v1.0.1
           branch: deployment/test-multi-file-update
           createPR: 'false'
-          message: 'Update DEV Image' 
+          message: 'Update DEV Image'
+          token: ${{ secrets.GH_TOKEN }}
       - uses: ./
         with:
           valueFile: '__tests__/fixtures/values.stage.yaml'
@@ -85,7 +88,8 @@ jobs:
           value: v1.0.1
           branch: deployment/test-multi-file-update
           createPR: 'false'
-          message: 'Update STAGE Image' 
+          message: 'Update STAGE Image'
+          token: ${{ secrets.GH_TOKEN }}
       - uses: ./
         with:
           valueFile: '__tests__/fixtures/values.prod.yaml'
@@ -96,4 +100,5 @@ jobs:
           # createPR: 'true' # enable to create a PR for all changes
           description: Test GitHub Action
           message: 'Update PROD Image' 
-          title: 'Version Update on all Environments' 
+          title: 'Version Update on all Environments'
+          token: ${{ secrets.GH_TOKEN }}
