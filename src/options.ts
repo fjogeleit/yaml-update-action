@@ -15,6 +15,9 @@ export interface Options {
   title: string
   description: string
   labels: string[]
+  reviewers: string[]
+  teamReviewers: string[]
+  assignees: string[]
   targetBranch: string
   repository: string
   githubAPI: string
@@ -90,6 +93,36 @@ export class GitHubOptions implements Options {
       .filter(label => !!label)
   }
 
+  get reviewers(): string[] {
+    if (!core.getInput('reviewers')) return []
+
+    return core
+      .getInput('reviewers')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
+  get teamReviewers(): string[] {
+    if (!core.getInput('teamReviewers')) return []
+
+    return core
+      .getInput('teamReviewers')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
+  get assignees(): string[] {
+    if (!core.getInput('assignees')) return []
+
+    return core
+      .getInput('assignees')
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => !!value)
+  }
+
   get workDir(): string {
     return core.getInput('workDir')
   }
@@ -161,6 +194,27 @@ export class EnvOptions implements Options {
 
   get labels(): string[] {
     return (process.env.LABELS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
+  get reviewers(): string[] {
+    return (process.env.REVIEWERS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
+  get teamReviewers(): string[] {
+    return (process.env.TEAM_REVIEWERS || '')
+      .split(',')
+      .map(label => label.trim())
+      .filter(label => !!label)
+  }
+
+  get assignees(): string[] {
+    return (process.env.ASSIGNEES || '')
       .split(',')
       .map(label => label.trim())
       .filter(label => !!label)

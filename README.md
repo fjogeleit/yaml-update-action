@@ -97,6 +97,9 @@ jobs:
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
 |githubAPI| BaseURL for all GitHub REST API requests | https://api.github.com |
 |token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
+|reviewers| List of Usernames to add as reviewers to the created Pull Request, e.g. "fjogeleit, username2" |  |
+|teamReviewers| List of Teamslugs to add as team reviewers to the created Pull Request |  |
+|assignees| List of Usernames to add as assignees to the created Pull Request |  |
 |commitUserName| Name used for the commit user | GitHub Actions |
 |commitUserEmail| Email address used for the commit user | actions@github.com |
 |updateFile| By default the actual file is not updated, to do so set this property to 'true' | false |
