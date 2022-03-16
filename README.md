@@ -97,6 +97,8 @@ jobs:
 |targetBranch| Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true' | master |
 |githubAPI| BaseURL for all GitHub REST API requests | https://api.github.com |
 |token| GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}|
+|commitUserName| Name used for the commit user | GitHub Actions |
+|commitUserEmail| Email address used for the commit user | actions@github.com |
 |updateFile| By default the actual file is not updated, to do so set this property to 'true' | false |
 |workDir| relative location of the configured `repository` | . |
 |masterBranchName| Branch name of your master branch | `master` |
