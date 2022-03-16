@@ -23,6 +23,10 @@ inputs:
     required: false
     description: 'Target Branch for the created PullRequest'
     default: master
+  githubAPI:
+    required: false
+    description: 'GitHub BaseURL'
+    default: https://api.github.com
   createPR:
     required: false
     description: 'Create a PullRequest to the configured target branch'
@@ -63,6 +67,14 @@ inputs:
     required: false
     description: 'repository workspace location'
     default: .
+  commitUserName:
+    description: Name used for the commit user
+    required: false
+    default: GitHub Actions
+  commitUserEmail:
+    description: Email address used for the commit user
+    required: false
+    default: actions@github.com
 runs:
   using: 'node16'
   main: 'dist/index.js'

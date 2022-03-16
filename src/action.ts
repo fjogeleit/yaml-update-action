@@ -6,6 +6,7 @@ import {Options} from './options'
 import {Octokit} from '@octokit/rest'
 import {Actions} from './github-actions'
 import {ChangedFile, createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
+import {Committer} from './committer'
 
 export type YamlNode = {[key: string]: string | number | boolean | YamlNode | YamlNode[]}
 
@@ -41,7 +42,7 @@ ${newYamlContent}
       return
     }
 
-    const octokit = new Octokit({auth: options.token})
+    const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
 
     const file: ChangedFile = {
       relativePath: options.valueFile,
@@ -49,7 +50,7 @@ ${newYamlContent}
       content: newYamlContent
     }
 
-    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions)
+    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer)
 
     if (options.createPR) {
       await createPullRequest(
@@ -125,7 +126,8 @@ export async function gitProcessing(
   file: ChangedFile,
   commitMessage: string,
   octokit: Octokit,
-  actions: Actions
+  actions: Actions,
+  committer: Committer
 ): Promise<void> {
   const {owner, repo} = repositoryInformation(repository)
   const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch, masterBranchName)
@@ -140,7 +142,7 @@ export async function gitProcessing(
 
   actions.debug(JSON.stringify({createdTree: newTreeSha}))
 
-  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha)
+  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer)
 
   actions.debug(JSON.stringify({createdCommit: newCommitSha}))
   actions.setOutput('commit', newCommitSha)

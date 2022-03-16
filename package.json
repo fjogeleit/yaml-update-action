@@ -1,6 +1,6 @@
 {
   "name": "typescript-action",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "description": "TypeScript template action",
   "main": "lib/main.js",
@@ -34,8 +34,8 @@
     "@types/js-yaml": "^4.0.5",
     "@types/jsonpath": "^0.2.0",
     "@types/node": "^17.0.21",
-    "@typescript-eslint/eslint-plugin": "^5.13.0",
-    "@typescript-eslint/parser": "^5.13.0",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "@typescript-eslint/parser": "^5.14.0",
     "@vercel/ncc": "^0.33.3",
     "eslint": "^8.10.0",
     "eslint-plugin-github": "^4.3.5",
