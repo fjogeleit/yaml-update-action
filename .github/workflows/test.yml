@@ -102,3 +102,8 @@ jobs:
           message: 'Update PROD Image' 
           title: 'Version Update on all Environments'
           token: ${{ secrets.GH_TOKEN }}
+      - name: Delete test branches
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-multi-file-update
