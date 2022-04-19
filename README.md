@@ -88,8 +88,6 @@ jobs:
 |valueFile   | relative path from the Workspace Directory                                      | _required_ Field    |
 |propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field    |
 |value       | New value for the related PropertyPath                                          | _required_ Field    |
-|title       | Custom title for the created Pull Request                                       | 'Merge: {{message}}'|
-|description | Custom description for the created Pull Request                                 | ''                  |
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
 |updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`               |
 |workDir     | relative location of the configured `repository` | . |
@@ -98,9 +96,11 @@ jobs:
 
 |Argument        |  Description                                                                                                |  Default               |
 |----------------|-------------------------------------------------------------------------------------------------------------|------------------------|
-|commitChange    | Commit the change to __branch__ with the given __message__                                                  | `true`                   |
+|commitChange    | Commit the change to __branch__ with the given __message__                                                  | `true`                 |
 |message         | Commit message for the changed YAML file                                                                    | ''                     |
-|createPR        | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                    | `true`                   |
+|createPR        | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                    | `true`                 |
+|title           | Custom title for the created Pull Request                                                                   | 'Merge: {{message}}'   |
+|description     | Custom description for the created Pull Request                                                             | ''                     |
 |targetBranch    | Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true'                                | `master`               |
 |repository      | The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below                                         | ${{github.repository}} |
 |branch          | The updated YAML file will be commited to this branch, branch will be created if not exists                 | `master`               |
