@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createPullRequest = exports.gitProcessing = exports.writeTo = exports.convert = exports.replace = exports.parseFile = exports.runTest = exports.run = void 0;
+exports.convertValue = exports.createPullRequest = exports.gitProcessing = exports.writeTo = exports.convert = exports.replace = exports.parseFile = exports.runTest = exports.run = void 0;
 const js_yaml_1 = __importDefault(__nccwpck_require__(1917));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
@@ -29,11 +29,18 @@ const git_commands_1 = __nccwpck_require__(4703);
 function run(options, actions) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(process.cwd(), options.workDir, options.valueFile);
+        let value = options.value;
+        try {
+            value = (0, exports.convertValue)(options.value);
+        }
+        catch (_a) {
+            actions.warning(`exception while trying to convert value '${value}'`);
+        }
         actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir: options.workDir, valueFile: options.valueFile })}`);
         try {
             const yamlContent = parseFile(filePath);
             actions.debug(`Parsed JSON: ${JSON.stringify(yamlContent)}`);
-            const result = replace(options.value, options.propertyPath, yamlContent);
+            const result = replace(value, options.propertyPath, yamlContent);
             const newYamlContent = convert(result);
             actions.debug(`Generated updated YAML
     
@@ -71,8 +78,9 @@ exports.run = run;
 function runTest(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(process.cwd(), options.workDir, options.valueFile);
+        const value = (0, exports.convertValue)(options.value);
         const yamlContent = parseFile(filePath);
-        const json = replace(options.value, options.propertyPath, yamlContent);
+        const json = replace(value, options.propertyPath, yamlContent);
         const yaml = convert(json);
         return { json, yaml };
     });
@@ -169,6 +177,14 @@ function createPullRequest(repository, branch, targetBranch, labels, title, desc
     });
 }
 exports.createPullRequest = createPullRequest;
+const convertValue = (value) => {
+    if (!value.startsWith('!!')) {
+        return value;
+    }
+    const result = js_yaml_1.default.load(`- ${value}`);
+    return result[0];
+};
+exports.convertValue = convertValue;
 
 
 /***/ }),
@@ -447,7 +463,7 @@ class GitHubOptions {
             .getInput('reviewers')
             .split(',')
             .map(value => value.trim())
-            .filter(label => !!label);
+            .filter(value => !!value);
     }
     get teamReviewers() {
         if (!core.getInput('teamReviewers'))
@@ -456,7 +472,7 @@ class GitHubOptions {
             .getInput('teamReviewers')
             .split(',')
             .map(value => value.trim())
-            .filter(label => !!label);
+            .filter(value => !!value);
     }
     get assignees() {
         if (!core.getInput('assignees'))
@@ -465,7 +481,7 @@ class GitHubOptions {
             .getInput('assignees')
             .split(',')
             .map(value => value.trim())
-            .filter(label => !!label);
+            .filter(value => !!value);
     }
     get workDir() {
         return core.getInput('workDir');

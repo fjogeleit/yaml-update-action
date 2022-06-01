@@ -12,6 +12,13 @@ export type YamlNode = {[key: string]: string | number | boolean | YamlNode | Ya
 
 export async function run(options: Options, actions: Actions): Promise<void> {
   const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
+  let value: string | number | boolean = options.value
+
+  try {
+    value = convertValue(options.value)
+  } catch {
+    actions.warning(`exception while trying to convert value '${value}'`)
+  }
 
   actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir: options.workDir, valueFile: options.valueFile})}`)
 
@@ -20,7 +27,7 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 
     actions.debug(`Parsed JSON: ${JSON.stringify(yamlContent)}`)
 
-    const result = replace(options.value, options.propertyPath, yamlContent)
+    const result = replace(value, options.propertyPath, yamlContent)
 
     const newYamlContent = convert(result)
 
@@ -76,9 +83,10 @@ ${newYamlContent}
 export async function runTest<T extends YamlNode>(options: Options): Promise<{json: T; yaml: string}> {
   const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
 
+  const value = convertValue(options.value)
   const yamlContent: T = parseFile<T>(filePath)
 
-  const json = replace<T>(options.value, options.propertyPath, yamlContent)
+  const json = replace<T>(value, options.propertyPath, yamlContent)
   const yaml = convert(json)
 
   return {json, yaml}
@@ -214,4 +222,14 @@ export async function createPullRequest(
   }
 
   actions.debug(`Add Label: ${labels.join(', ')}`)
+}
+
+export const convertValue = (value: string): string | number | boolean => {
+  if (!value.startsWith('!!')) {
+    return value
+  }
+
+  const result = YAML.load(`- ${value}`) as [string | number | boolean]
+
+  return result[0]
 }
