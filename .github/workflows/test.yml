@@ -97,13 +97,49 @@ jobs:
           value: v1.0.1
           branch: deployment/test-multi-file-update
           targetBranch: main
-          # createPR: 'true' # enable to create a PR for all changes
           description: Test GitHub Action
           message: 'Update PROD Image' 
           title: 'Version Update on all Environments'
           token: ${{ secrets.GH_TOKEN }}
+
+  test-value-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'config.prod'
+          value: "!!bool 'true'"
+          branch: deployment/test-bool-value
+          targetBranch: main
+          description: Test GitHub Action
+          message: 'Update Config' 
+          title: 'Bool Update on all Environments'
+          token: ${{ secrets.GH_TOKEN }}
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'config.version'
+          value: "!!int '1234'"
+          branch: deployment/test-int-value
+          targetBranch: main
+          description: Test GitHub Action
+          message: 'Update Config' 
+          title: 'Int Update on all Environments'
+          token: ${{ secrets.GH_TOKEN }}
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs:
+      - test-target-repository
+      - test-update-file
+      - test-multiple-file-changes
+      - test-value-types
+    steps:
+      - uses: actions/checkout@v2
       - name: Delete test branches
         uses: dawidd6/action-delete-branch@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
-          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-multi-file-update
+          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-multi-file-update,deployment/test-bool-value,deployment/test-int-value
