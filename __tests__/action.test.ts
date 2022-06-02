@@ -68,3 +68,25 @@ test('test array item change - new syntax', async () => {
 
   expect(json.containers[0].image).toEqual(process.env['VALUE'])
 })
+
+test('test bool value', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/values.yaml'
+  process.env['WORK_DIR'] = '__tests__'
+  process.env['VALUE_PATH'] = 'config.prod'
+  process.env['VALUE'] = "!!bool 'true'"
+
+  const {json} = await runTest<{config: {prod: boolean}}>(new EnvOptions())
+
+  expect(json.config.prod).toEqual(true)
+})
+
+test('test int value', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/values.yaml'
+  process.env['WORK_DIR'] = '__tests__'
+  process.env['VALUE_PATH'] = 'config.version'
+  process.env['VALUE'] = "!!int '123456'"
+
+  const {json} = await runTest<{config: {version: number}}>(new EnvOptions())
+
+  expect(json.config.version).toEqual(123456)
+})

@@ -5,7 +5,7 @@ import {Committer} from './committer'
 export interface Options {
   valueFile: string
   propertyPath: string
-  value: string | number | boolean
+  value: string
   token: string
   commitChange: boolean
   updateFile: boolean
