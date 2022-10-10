@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
-import {Committer} from './committer'
+import {convertValue, parseChanges} from './helper'
+import {Committer, Changes} from './types'
 
 export interface Options {
   valueFile: string
@@ -24,6 +25,7 @@ export interface Options {
   createPR: boolean
   workDir: string
   committer: Committer
+  changes: Changes
 }
 
 export class GitHubOptions implements Options {
@@ -137,6 +139,25 @@ export class GitHubOptions implements Options {
       email: core.getInput('commitUserEmail')
     }
   }
+
+  get changes(): Changes {
+    const changes: Changes = {}
+    if (this.valueFile && this.propertyPath) {
+      let value: string | number | boolean = this.value
+
+      try {
+        value = convertValue(value)
+      } catch {
+        core.warning(`exception while trying to convert value '${this.value}'`)
+      }
+
+      changes[this.valueFile] = {
+        [this.propertyPath]: value
+      }
+    }
+
+    return parseChanges(changes, this.valueFile, core.getInput('changes'))
+  }
 }
 
 export class EnvOptions implements Options {
@@ -237,5 +258,24 @@ export class EnvOptions implements Options {
       name: process.env.COMMIT_USER_NAME || '',
       email: process.env.COMMIT_USER_EMAIL || ''
     }
+  }
+
+  get changes(): Changes {
+    const changes: Changes = {}
+    if (this.valueFile && this.propertyPath) {
+      let value: string | number | boolean = this.value
+
+      try {
+        value = convertValue(value)
+      } catch {
+        core.warning(`exception while trying to convert value '${this.value}'`)
+      }
+
+      changes[this.valueFile] = {
+        [this.propertyPath]: value
+      }
+    }
+
+    return parseChanges(changes, this.valueFile, process.env.CHANGES || '')
   }
 }

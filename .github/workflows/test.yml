@@ -25,6 +25,7 @@ jobs:
         with:
           valueFile: '__tests__/fixtures/values.yaml'
           propertyPath: 'backend.version'
+          masterBranchName: main
           value: v1.0.1
           branch: deployment/v1.0.1
           targetBranch: main
@@ -44,6 +45,7 @@ jobs:
           valueFile: '__tests__/fixtures/values.yaml'
           propertyPath: 'backend.version'
           value: v1.2.1
+          masterBranchName: main
           branch: deployment/v1.2.1
           targetBranch: main
           createPR: 'false'
@@ -63,6 +65,7 @@ jobs:
           valueFile: '__tests__/fixtures/values.yaml'
           propertyPath: 'backend.version'
           value: v1.0.1
+          masterBranchName: main
           commitChange: 'false'
           updateFile: 'true'
       - name: Cat Updated values.yaml
@@ -74,34 +77,28 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          valueFile: '__tests__/fixtures/values.dev.yaml'
-          propertyPath: 'backend.version'
-          value: v1.0.1
           branch: deployment/test-multi-file-update
+          masterBranchName: main
           createPR: 'false'
-          message: 'Update DEV Image'
-          token: ${{ secrets.GH_TOKEN }}
-      - uses: ./
-        with:
-          valueFile: '__tests__/fixtures/values.stage.yaml'
-          propertyPath: 'backend.version'
-          value: v1.0.1
-          branch: deployment/test-multi-file-update
-          createPR: 'false'
-          message: 'Update STAGE Image'
-          token: ${{ secrets.GH_TOKEN }}
-      - uses: ./
-        with:
-          valueFile: '__tests__/fixtures/values.prod.yaml'
-          propertyPath: 'backend.version'
-          value: v1.0.1
-          branch: deployment/test-multi-file-update
           targetBranch: main
           description: Test GitHub Action
-          message: 'Update PROD Image' 
-          title: 'Version Update on all Environments'
-          token: ${{ secrets.GH_TOKEN }}
-
+          message: 'Update All Images' 
+          title: 'Version Updates on all Environments'
+          changes: |
+            {
+              "__tests__/fixtures/values.dev.yaml": {
+                "backend.version": "v1.0.1",
+                "frontend": true
+              },
+              "__tests__/fixtures/values.stage.yaml": {
+                "backend.version": "v1.0.1",
+                "frontend": true
+              },
+              "__tests__/fixtures/values.prod.yaml": {
+                "backend.version": "v1.0.1",
+                "frontend": true
+              }
+            }
   test-value-types:
     runs-on: ubuntu-latest
     steps:
@@ -112,6 +109,7 @@ jobs:
           propertyPath: 'config.prod'
           value: "!!bool 'true'"
           branch: deployment/test-bool-value
+          masterBranchName: main
           targetBranch: main
           description: Test GitHub Action
           message: 'Update Config' 
@@ -123,6 +121,7 @@ jobs:
           propertyPath: 'config.version'
           value: "!!int '1234'"
           branch: deployment/test-int-value
+          masterBranchName: main
           targetBranch: main
           description: Test GitHub Action
           message: 'Update Config' 
@@ -142,4 +141,4 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
-          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-multi-file-update,deployment/test-bool-value,deployment/test-int-value
+          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-bool-value,deployment/test-int-value,deployment/test-multi-file-update
