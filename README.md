@@ -88,10 +88,10 @@ jobs:
 |valueFile   | relative path from the Workspace Directory                                      | _required_ Field    |
 |propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field    |
 |value       | New value for the related PropertyPath                                          | _required_ Field    |
+|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{ "filepath": { "propertyPath": "value"}}` and `{ "propertyPath": "value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
-|updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`               |
-|workDir     | relative location of the configured `repository` | . |
-
+|updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`             |
+|workDir     | relative location of the configured `repository` | .                            |                     |
 ### Git related Configurations
 
 |Argument        |  Description                                                                                                |  Default               |

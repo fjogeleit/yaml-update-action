@@ -1,12 +1,5 @@
 import {Octokit} from '@octokit/rest'
-import {Committer} from './committer'
-
-export type ChangedFile = {
-  absolutePath: string
-  relativePath: string
-  content: string
-  sha?: string
-}
+import {Committer, ChangedFile} from './types'
 
 export type GitCreateTreeParamsTree = {
   path?: string
@@ -86,8 +79,12 @@ export const createBlobForFile = async (octo: Octokit, org: string, repo: string
   return data.sha
 }
 
-export const createNewTree = async (octo: Octokit, owner: string, repo: string, file: ChangedFile, parentTreeSha: string): Promise<string> => {
-  const tree: GitCreateTreeParamsTree[] = [{path: file.relativePath, mode: `100644`, type: `blob`, sha: file.sha}]
+export const createNewTree = async (octo: Octokit, owner: string, repo: string, files: ChangedFile[], parentTreeSha: string): Promise<string> => {
+  const tree: GitCreateTreeParamsTree[] = []
+
+  for (const file of files) {
+    tree.push({path: file.relativePath, mode: `100644`, type: `blob`, sha: file.sha})
+  }
 
   const {data} = await octo.git.createTree({owner, repo, tree, base_tree: parentTreeSha})
 

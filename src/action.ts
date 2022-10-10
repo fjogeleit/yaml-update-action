@@ -4,45 +4,19 @@ import path from 'path'
 import jp from 'jsonpath'
 import {Options} from './options'
 import {Octokit} from '@octokit/rest'
-import {Actions} from './github-actions'
-import {ChangedFile, createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
-import {Committer} from './committer'
-
-export type YamlNode = {[key: string]: string | number | boolean | YamlNode | YamlNode[]}
+import {Actions, EmptyActions} from './github-actions'
+import {createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
+import {ChangedFile, Committer, ValueUpdates, YamlNode} from './types'
 
 export async function run(options: Options, actions: Actions): Promise<void> {
-  const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
-  let value: string | number | boolean = options.value
-
   try {
-    value = convertValue(options.value)
-  } catch {
-    actions.warning(`exception while trying to convert value '${value}'`)
-  }
+    const files: ChangedFile[] = []
 
-  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir: options.workDir, valueFile: options.valueFile})}`)
-
-  try {
-    const yamlContent: YamlNode = parseFile(filePath)
-
-    actions.debug(`Parsed JSON: ${JSON.stringify(yamlContent)}`)
-
-    const result = replace(value, options.propertyPath, yamlContent)
-
-    const newYamlContent = convert(result)
-
-    actions.debug(`Generated updated YAML
-    
-${newYamlContent}
-`)
-    // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
-    if (yamlContent === result) {
-      actions.debug(`Nothing changed, skipping rest of the workflow.`)
-      return
-    }
-
-    if (options.updateFile === true) {
-      writeTo(newYamlContent, filePath, actions)
+    for (const [file, values] of Object.entries(options.changes)) {
+      const changedFile = processFile(file, values, options.workDir, options.updateFile, actions)
+      if (changedFile) {
+        files.push(changedFile)
+      }
     }
 
     if (options.commitChange === false) {
@@ -51,13 +25,9 @@ ${newYamlContent}
 
     const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
 
-    const file: ChangedFile = {
-      relativePath: options.valueFile,
-      absolutePath: filePath,
-      content: newYamlContent
-    }
+    actions.debug(`files: ${JSON.stringify(files)}`)
 
-    await gitProcessing(options.repository, options.branch, options.masterBranchName, file, options.message, octokit, actions, options.committer)
+    await gitProcessing(options.repository, options.branch, options.masterBranchName, files, options.message, octokit, actions, options.committer)
 
     if (options.createPR) {
       await createPullRequest(
@@ -80,16 +50,17 @@ ${newYamlContent}
   }
 }
 
-export async function runTest<T extends YamlNode>(options: Options): Promise<{json: T; yaml: string}> {
-  const filePath = path.join(process.cwd(), options.workDir, options.valueFile)
+export async function runTest<T extends YamlNode>(options: Options): Promise<(ChangedFile & {json: T})[]> {
+  const files: ChangedFile[] = []
 
-  const value = convertValue(options.value)
-  const yamlContent: T = parseFile<T>(filePath)
+  for (const [file, values] of Object.entries(options.changes)) {
+    const changedFile = processFile(file, values, options.workDir, options.updateFile, new EmptyActions())
+    if (changedFile) {
+      files.push(changedFile)
+    }
+  }
 
-  const json = replace<T>(value, options.propertyPath, yamlContent)
-  const yaml = convert(json)
-
-  return {json, yaml}
+  return files as (ChangedFile & {json: T})[]
 }
 
 export function parseFile<T extends YamlNode>(filePath: string): T {
@@ -134,7 +105,7 @@ export async function gitProcessing(
   repository: string,
   branch: string,
   masterBranchName: string,
-  file: ChangedFile,
+  files: ChangedFile[],
   commitMessage: string,
   octokit: Octokit,
   actions: Actions,
@@ -144,12 +115,16 @@ export async function gitProcessing(
   const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch, masterBranchName)
 
   actions.debug(JSON.stringify({baseCommit: commitSha, baseTree: treeSha}))
+  const debugFiles: {[file: string]: string} = {}
 
-  file.sha = await createBlobForFile(octokit, owner, repo, file)
+  for (const file of files) {
+    file.sha = await createBlobForFile(octokit, owner, repo, file)
+    debugFiles[file.relativePath] = file.sha
+  }
 
-  actions.debug(JSON.stringify({fileBlob: file.sha}))
+  actions.debug(JSON.stringify(debugFiles))
 
-  const newTreeSha = await createNewTree(octokit, owner, repo, file, treeSha)
+  const newTreeSha = await createNewTree(octokit, owner, repo, files, treeSha)
 
   actions.debug(JSON.stringify({createdTree: newTreeSha}))
 
@@ -232,4 +207,44 @@ export const convertValue = (value: string): string | number | boolean => {
   const result = YAML.load(`- ${value}`) as [string | number | boolean]
 
   return result[0]
+}
+
+export function processFile(file: string, values: ValueUpdates, workDir: string, updateFile: boolean, actions: Actions): ChangedFile | null {
+  const filePath = path.join(process.cwd(), workDir, file)
+
+  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir, valueFile: file})}`)
+
+  let contentNode = parseFile(filePath)
+  let contentYAML = convert(contentNode)
+
+  const initContent = contentYAML
+
+  actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`)
+
+  for (const [propertyPath, value] of Object.entries(values)) {
+    contentNode = replace(value, propertyPath, contentNode)
+    contentYAML = convert(contentNode)
+
+    actions.debug(`Generated updated YAML
+    
+${contentYAML}
+`)
+  }
+
+  // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
+  if (initContent === contentYAML) {
+    actions.debug(`Nothing changed, skipping rest of the workflow.`)
+    return null
+  }
+
+  if (updateFile === true) {
+    writeTo(contentYAML, filePath, actions)
+  }
+
+  return {
+    relativePath: file,
+    absolutePath: filePath,
+    content: contentYAML,
+    json: contentNode
+  }
 }
