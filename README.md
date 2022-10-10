@@ -128,7 +128,7 @@ In this first version the updated YAML file will not be patched. It is parsed in
 
 By default each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
 
-## Example
+## Examples
 
 ### Multi Value Changes
 
@@ -143,6 +143,7 @@ jobs:
           valueFile: 'deployment/helm/values.yaml'
           branch: deployment/dev
           targetBranch: main
+          createPR: 'true'
           description: Test GitHub Action
           message: 'Update All Images' 
           title: 'Version Updates '
@@ -166,6 +167,7 @@ jobs:
           valueFile: 'deployment/helm/values.yaml'
           branch: deployment/v1.0.1
           targetBranch: main
+          createPR: 'true'
           description: Test GitHub Action
           message: 'Update All Images' 
           title: 'Version Updates '
