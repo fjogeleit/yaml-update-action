@@ -79,7 +79,7 @@ jobs:
           message: 'Update Image Version to ${{ steps.image.outputs.version }}' 
 ```
 
-### Input Arguments
+## Input Arguments
 
 ### Base Configurations
 
@@ -88,7 +88,7 @@ jobs:
 |valueFile   | relative path from the Workspace Directory                                      | _required_ Field    |
 |propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field    |
 |value       | New value for the related PropertyPath                                          | _required_ Field    |
-|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{ "filepath": { "propertyPath": "value"}}` and `{ "propertyPath": "value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
+|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
 |updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`             |
 |workDir     | relative location of the configured `repository` | .                            |                     |
@@ -115,18 +115,73 @@ jobs:
 - `commit` Git Commit SHA
 - `pull_request` Git PR Informations
 
-### Debug Informations
+## Debug Informations
 
 Enable Debug mode to get informations about
 
 - YAML parse and update results
 - Git Steps
 
-### Known Issues
+## Known Issues
 
 In this first version the updated YAML file will not be patched. It is parsed into JSON, after the update its converted back to YAML. This means that comments and blank lines will be removed in this process and the intend of the updated content can be different to the previous.
 
 By default each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
+
+## Example
+
+### Multi Value Changes
+
+```yaml
+jobs:
+  test-multiple-value-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'deployment/helm/values.yaml'
+          branch: deployment/dev
+          targetBranch: main
+          description: Test GitHub Action
+          message: 'Update All Images' 
+          title: 'Version Updates '
+          changes: |
+            {
+              "backend.version": "${{ steps.image.outputs.backend.version }}",
+              "frontend.version": "${{ steps.image.outputs.frontend.version }}"
+            }
+```
+
+### Multi File Changes
+
+```yaml
+jobs:
+  test-multiple-file-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'deployment/helm/values.yaml'
+          branch: deployment/v1.0.1
+          targetBranch: main
+          description: Test GitHub Action
+          message: 'Update All Images' 
+          title: 'Version Updates '
+          changes: |
+            {
+              "__tests__/fixtures/values.dev.yaml": {
+                "backend.version": "v1.0.1"
+              },
+              "__tests__/fixtures/values.stage.yaml": {
+                "backend.version": "v1.0.1"
+              },
+              "__tests__/fixtures/values.prod.yaml": {
+                "backend.version": "v1.0.1"
+              }
+            }
+```
 
 ### Advaned Example with an separate target repository
 
