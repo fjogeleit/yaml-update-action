@@ -19,13 +19,13 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       }
     }
 
-    if (options.commitChange === false) {
+    actions.debug(`files: ${JSON.stringify(files)}`)
+
+    if (options.commitChange === false || files.length === 0) {
       return
     }
 
     const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
-
-    actions.debug(`files: ${JSON.stringify(files)}`)
 
     await gitProcessing(options.repository, options.branch, options.masterBranchName, files, options.message, octokit, actions, options.committer)
 

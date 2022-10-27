@@ -33,6 +33,23 @@ jobs:
           message: 'Update Image Version to v1.0.1'
           token: ${{ secrets.GH_TOKEN }}
 
+  test-no-changes-did-not-fail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          valueFile: '__tests__/fixtures/values.yaml'
+          propertyPath: 'backend.version'
+          masterBranchName: main
+          value: v1.2.0
+          branch: deployment/v1.2.0
+          targetBranch: main
+          createPR: 'false'
+          message: 'Update Image Version to v1.2.0'
+          token: ${{ secrets.GH_TOKEN }}
+
+
   test-target-repository:
     runs-on: ubuntu-latest
     steps:

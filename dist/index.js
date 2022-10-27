@@ -37,11 +37,11 @@ function run(options, actions) {
                     files.push(changedFile);
                 }
             }
-            if (options.commitChange === false) {
+            actions.debug(`files: ${JSON.stringify(files)}`);
+            if (options.commitChange === false || files.length === 0) {
                 return;
             }
             const octokit = new rest_1.Octokit({ auth: options.token, baseUrl: options.githubAPI });
-            actions.debug(`files: ${JSON.stringify(files)}`);
             yield gitProcessing(options.repository, options.branch, options.masterBranchName, files, options.message, octokit, actions, options.committer);
             if (options.createPR) {
                 yield createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, options.reviewers, options.teamReviewers, options.assignees, octokit, actions);
