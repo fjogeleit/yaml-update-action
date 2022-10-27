@@ -20,7 +20,7 @@ jobs:
   test-update-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Update values.yaml
         uses: fjogeleit/yaml-update-action@main
         with:
@@ -43,7 +43,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build app image
         run: docker build . --tag image
@@ -137,7 +137,7 @@ jobs:
   test-multiple-value-changes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
@@ -161,7 +161,7 @@ jobs:
   test-multiple-file-changes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
@@ -195,7 +195,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
             path: main
 
@@ -214,7 +214,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
 
       - name: Checkout Target Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: owner/target-repository
           path: infrastructure

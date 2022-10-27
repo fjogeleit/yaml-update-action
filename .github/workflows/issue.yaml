@@ -10,7 +10,7 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Update environment
         uses: ./
         with:
