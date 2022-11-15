@@ -92,6 +92,18 @@ jobs:
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
 |updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`             |
 |workDir     | relative location of the configured `repository` | .                            |                     |
+|method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
+
+#### Methods
+
+Determine the behavior for none existing properties or array elements.
+
+| Enum           | Description |
+|----------------|-------------|
+| CreateOrUpdate | Updates existing values or creates them if not available |
+| Update         | Updates existing values, skips the change if not |
+| Create         | Creates none existing values, skips the change if the property already exists |
+
 ### Git related Configurations
 
 |Argument        |  Description                                                                                                |  Default               |

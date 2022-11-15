@@ -27,12 +27,14 @@ const jsonpath_1 = __importDefault(__nccwpck_require__(4378));
 const rest_1 = __nccwpck_require__(5375);
 const github_actions_1 = __nccwpck_require__(6905);
 const git_commands_1 = __nccwpck_require__(4703);
+const types_1 = __nccwpck_require__(8164);
+const APPEND_ARRAY_EXPRESSION = '[(@.length)]';
 function run(options, actions) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const files = [];
             for (const [file, values] of Object.entries(options.changes)) {
-                const changedFile = processFile(file, values, options.workDir, options.updateFile, actions);
+                const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, actions);
                 if (changedFile) {
                     files.push(changedFile);
                 }
@@ -58,7 +60,7 @@ function runTest(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
         for (const [file, values] of Object.entries(options.changes)) {
-            const changedFile = processFile(file, values, options.workDir, options.updateFile, new github_actions_1.EmptyActions());
+            const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, new github_actions_1.EmptyActions());
             if (changedFile) {
                 files.push(changedFile);
             }
@@ -78,10 +80,22 @@ function parseFile(filePath) {
     return result;
 }
 exports.parseFile = parseFile;
-function replace(value, jsonPath, content) {
+function replace(value, jsonPath, content, method) {
     const copy = JSON.parse(JSON.stringify(content));
     if (!jsonPath.startsWith('$')) {
         jsonPath = `$.${jsonPath}`;
+    }
+    if (method === types_1.Method.Update && pathNotExists(copy, jsonPath)) {
+        return content;
+    }
+    if (method === types_1.Method.Create && !pathNotExists(copy, jsonPath)) {
+        return content;
+    }
+    if ([types_1.Method.CreateOrUpdate, types_1.Method.Create].includes(method) && isAppendArrayNode(content, jsonPath)) {
+        jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '');
+        const parent = jsonpath_1.default.value(copy, jsonPath);
+        parent.push(value);
+        value = parent;
     }
     jsonpath_1.default.value(copy, jsonPath, value);
     return copy;
@@ -170,7 +184,7 @@ const convertValue = (value) => {
     return result[0];
 };
 exports.convertValue = convertValue;
-function processFile(file, values, workDir, updateFile, actions) {
+function processFile(file, values, workDir, method, updateFile, actions) {
     const filePath = path_1.default.join(process.cwd(), workDir, file);
     actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir, valueFile: file })}`);
     let contentNode = parseFile(filePath);
@@ -178,7 +192,7 @@ function processFile(file, values, workDir, updateFile, actions) {
     const initContent = contentYAML;
     actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`);
     for (const [propertyPath, value] of Object.entries(values)) {
-        contentNode = replace(value, propertyPath, contentNode);
+        contentNode = replace(value, propertyPath, contentNode, method);
         contentYAML = convert(contentNode);
         actions.debug(`Generated updated YAML
     
@@ -201,6 +215,20 @@ ${contentYAML}
     };
 }
 exports.processFile = processFile;
+const pathNotExists = (content, jsonPath) => {
+    return jsonpath_1.default.paths(content, jsonPath) && jsonpath_1.default.value(content, jsonPath) === undefined;
+};
+const isAppendArrayNode = (content, jsonPath) => {
+    if (!pathNotExists(content, jsonPath)) {
+        return false;
+    }
+    if (!jsonPath.endsWith(APPEND_ARRAY_EXPRESSION)) {
+        return false;
+    }
+    jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '');
+    const parent = jsonpath_1.default.value(content, jsonPath.replace(APPEND_ARRAY_EXPRESSION, ''));
+    return Array.isArray(parent);
+};
 
 
 /***/ }),
@@ -514,6 +542,7 @@ exports.EnvOptions = exports.GitHubOptions = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const process = __importStar(__nccwpck_require__(7282));
 const helper_1 = __nccwpck_require__(3947);
+const types_1 = __nccwpck_require__(8164);
 class GitHubOptions {
     get valueFile() {
         return core.getInput('valueFile');
@@ -621,6 +650,13 @@ class GitHubOptions {
         }
         return (0, helper_1.parseChanges)(changes, this.valueFile, core.getInput('changes'));
     }
+    get method() {
+        const method = (core.getInput('method') || '').toLowerCase();
+        if ([types_1.Method.CreateOrUpdate, types_1.Method.Create, types_1.Method.Update].includes(method)) {
+            return method;
+        }
+        return types_1.Method.CreateOrUpdate;
+    }
 }
 exports.GitHubOptions = GitHubOptions;
 class EnvOptions {
@@ -718,8 +754,32 @@ class EnvOptions {
         }
         return (0, helper_1.parseChanges)(changes, this.valueFile, process.env.CHANGES || '');
     }
+    get method() {
+        const method = (process.env.METHOD || '').toLowerCase();
+        if ([types_1.Method.CreateOrUpdate, types_1.Method.Create, types_1.Method.Update].includes(method)) {
+            return process.env.METHOD;
+        }
+        return types_1.Method.CreateOrUpdate;
+    }
 }
 exports.EnvOptions = EnvOptions;
+
+
+/***/ }),
+
+/***/ 8164:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Method = void 0;
+var Method;
+(function (Method) {
+    Method["CreateOrUpdate"] = "createorupdate";
+    Method["Update"] = "update";
+    Method["Create"] = "create";
+})(Method = exports.Method || (exports.Method = {}));
 
 
 /***/ }),

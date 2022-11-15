@@ -7,10 +7,13 @@ inputs:
     description: 'YAML file which should be updated'
   propertyPath:
     required: true
-    description: 'Property Path - using dot for nesting: e.g. backend.version'
+    description: 'Property Path - valid jsonPath expression'
   value:
     required: true
     description: 'New property value'
+  method:
+    required: false
+    description: 'Configures the processing of none existing properties. Possible values: CreateOrUpdate, Update, Create'
   changes:
     required: false
     description: 'Map of changes for a single or multiple files as JSON. Supports following formats: { "filepath": {"propertyPath": "value"}} or {"propertyPath": "value"}. If filepath is not provided it fallsback to the path configured under valueFile.'

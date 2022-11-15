@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
 import {convertValue, parseChanges} from './helper'
-import {Committer, Changes} from './types'
+import {Committer, Changes, Method} from './types'
 
 export interface Options {
   valueFile: string
@@ -26,6 +26,7 @@ export interface Options {
   workDir: string
   committer: Committer
   changes: Changes
+  method: Method
 }
 
 export class GitHubOptions implements Options {
@@ -158,6 +159,16 @@ export class GitHubOptions implements Options {
 
     return parseChanges(changes, this.valueFile, core.getInput('changes'))
   }
+
+  get method(): Method {
+    const method = (core.getInput('method') || '').toLowerCase() as Method
+
+    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+      return method
+    }
+
+    return Method.CreateOrUpdate
+  }
 }
 
 export class EnvOptions implements Options {
@@ -277,5 +288,15 @@ export class EnvOptions implements Options {
     }
 
     return parseChanges(changes, this.valueFile, process.env.CHANGES || '')
+  }
+
+  get method(): Method {
+    const method = (process.env.METHOD || '').toLowerCase() as Method
+
+    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+      return process.env.METHOD as Method
+    }
+
+    return Method.CreateOrUpdate
   }
 }

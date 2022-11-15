@@ -22,3 +22,9 @@ export type ChangedFile = {
   json: YamlNode
   sha?: string
 }
+
+export enum Method {
+  CreateOrUpdate = 'createorupdate',
+  Update = 'update',
+  Create = 'create'
+}

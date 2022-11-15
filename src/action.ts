@@ -6,14 +6,16 @@ import {Options} from './options'
 import {Octokit} from '@octokit/rest'
 import {Actions, EmptyActions} from './github-actions'
 import {createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
-import {ChangedFile, Committer, ValueUpdates, YamlNode} from './types'
+import {ChangedFile, Committer, Method, ValueUpdates, YamlNode} from './types'
+
+const APPEND_ARRAY_EXPRESSION = '[(@.length)]'
 
 export async function run(options: Options, actions: Actions): Promise<void> {
   try {
     const files: ChangedFile[] = []
 
     for (const [file, values] of Object.entries(options.changes)) {
-      const changedFile = processFile(file, values, options.workDir, options.updateFile, actions)
+      const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, actions)
       if (changedFile) {
         files.push(changedFile)
       }
@@ -54,7 +56,7 @@ export async function runTest<T extends YamlNode>(options: Options): Promise<(Ch
   const files: ChangedFile[] = []
 
   for (const [file, values] of Object.entries(options.changes)) {
-    const changedFile = processFile(file, values, options.workDir, options.updateFile, new EmptyActions())
+    const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, new EmptyActions())
     if (changedFile) {
       files.push(changedFile)
     }
@@ -77,11 +79,27 @@ export function parseFile<T extends YamlNode>(filePath: string): T {
   return result
 }
 
-export function replace<T extends YamlNode>(value: string | number | boolean, jsonPath: string, content: YamlNode): T {
+export function replace<T extends YamlNode>(value: string | number | boolean | unknown[], jsonPath: string, content: YamlNode, method: Method): T {
   const copy = JSON.parse(JSON.stringify(content))
 
   if (!jsonPath.startsWith('$')) {
     jsonPath = `$.${jsonPath}`
+  }
+
+  if (method === Method.Update && pathNotExists(copy, jsonPath)) {
+    return content as T
+  }
+
+  if (method === Method.Create && !pathNotExists(copy, jsonPath)) {
+    return content as T
+  }
+
+  if ([Method.CreateOrUpdate, Method.Create].includes(method) && isAppendArrayNode(content, jsonPath)) {
+    jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '')
+    const parent: unknown[] = jp.value(copy, jsonPath)
+
+    parent.push(value)
+    value = parent
   }
 
   jp.value(copy, jsonPath, value)
@@ -209,7 +227,14 @@ export const convertValue = (value: string): string | number | boolean => {
   return result[0]
 }
 
-export function processFile(file: string, values: ValueUpdates, workDir: string, updateFile: boolean, actions: Actions): ChangedFile | null {
+export function processFile(
+  file: string,
+  values: ValueUpdates,
+  workDir: string,
+  method: Method,
+  updateFile: boolean,
+  actions: Actions
+): ChangedFile | null {
   const filePath = path.join(process.cwd(), workDir, file)
 
   actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir, valueFile: file})}`)
@@ -222,7 +247,7 @@ export function processFile(file: string, values: ValueUpdates, workDir: string,
   actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`)
 
   for (const [propertyPath, value] of Object.entries(values)) {
-    contentNode = replace(value, propertyPath, contentNode)
+    contentNode = replace(value, propertyPath, contentNode, method)
     contentYAML = convert(contentNode)
 
     actions.debug(`Generated updated YAML
@@ -247,4 +272,24 @@ ${contentYAML}
     content: contentYAML,
     json: contentNode
   }
+}
+
+const pathNotExists = (content: YamlNode, jsonPath: string): boolean => {
+  return jp.paths(content, jsonPath) && jp.value(content, jsonPath) === undefined
+}
+
+const isAppendArrayNode = (content: YamlNode, jsonPath: string): boolean => {
+  if (!pathNotExists(content, jsonPath)) {
+    return false
+  }
+
+  if (!jsonPath.endsWith(APPEND_ARRAY_EXPRESSION)) {
+    return false
+  }
+
+  jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '')
+
+  const parent = jp.value(content, jsonPath.replace(APPEND_ARRAY_EXPRESSION, ''))
+
+  return Array.isArray(parent)
 }
