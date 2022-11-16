@@ -103,6 +103,10 @@ jobs:
           title: 'Version Updates on all Environments'
           changes: |
             {
+              "__tests__/fixtures/values.json": {
+                "backend.version": "v1.0.1",
+                "frontend": true
+              },
               "__tests__/fixtures/values.dev.yaml": {
                 "backend.version": "v1.0.1",
                 "frontend": true

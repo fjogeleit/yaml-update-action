@@ -3,8 +3,8 @@ export type Committer = {
   email: string
 }
 
-export type YamlNode = {
-  [key: string]: string | number | boolean | YamlNode | YamlNode[]
+export type ContentNode = {
+  [key: string]: string | number | boolean | ContentNode | ContentNode[]
 }
 
 export type ValueUpdates = {
@@ -19,7 +19,7 @@ export type ChangedFile = {
   absolutePath: string
   relativePath: string
   content: string
-  json: YamlNode
+  json: ContentNode
   sha?: string
 }
 
@@ -27,4 +27,15 @@ export enum Method {
   CreateOrUpdate = 'createorupdate',
   Update = 'update',
   Create = 'create'
+}
+
+export enum Format {
+  YAML = 'yaml',
+  JSON = 'json',
+  UNKNOWN = ''
+}
+
+export type FormatParser = {
+  convert<T extends ContentNode>(filePath: string): T
+  dump<T extends ContentNode>(content: T): string
 }
