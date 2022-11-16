@@ -91,7 +91,7 @@ jobs:
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
 |updateFile  | **(deprected)** the updated content will be written into the actual file by default | `false`             |
 |workDir     | Relative location of the configured `repository` | .                            |                     |
-|format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
+|format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML`, `YML` and `JSON` ||
 |method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
 
 #### Methods
