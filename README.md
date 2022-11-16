@@ -1,13 +1,13 @@
 # YAML Update Action
 
-Update a single value in an existing YAML File. Push this updated YAML to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
+Update valuew in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
 
 
 ## Use Cases
 
 ### Change a local YAML file without commiting the change
 
-By default the actual file in your workspace did not change. This Action creates an in memory copy of your YAML file and sends it to GitHub via the REST API. To achieve an actual update of your local YAML file within your workflow use the following configuration:
+With the latest release, the content of your actual file will be updated by default. So, you just need to skip the commit of your change.
 
 ```yaml
 name: 'workflow'
@@ -28,7 +28,6 @@ jobs:
           propertyPath: 'file.version'
           value: v1.0.1
           commitChange: false
-          updateFile: true
 ```
 
 ### Update Helm Chart after a new Docker Image was build
@@ -90,8 +89,9 @@ jobs:
 |value       | New value for the related PropertyPath                                          | _required_ Field    |
 |changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
-|updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`             |
-|workDir     | relative location of the configured `repository` | .                            |                     |
+|updateFile  | **(deprected)** the updated content will be written into the actual file by default | `false`             |
+|workDir     | Relative location of the configured `repository` | .                            |                     |
+|format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
 |method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
 
 #### Methods

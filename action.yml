@@ -11,6 +11,9 @@ inputs:
   value:
     required: true
     description: 'New property value'
+  format:
+    required: false
+    description: 'Supported file formats, possible values are YAML and JSON, will be guessed by file extension if not provided. Falls back to YAML'
   method:
     required: false
     description: 'Configures the processing of none existing properties. Possible values: CreateOrUpdate, Update, Create'

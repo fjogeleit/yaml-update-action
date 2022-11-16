@@ -3,20 +3,27 @@ import fs from 'fs'
 import path from 'path'
 import jp from 'jsonpath'
 import {Options} from './options'
+import {formatGuesser, formatParser} from './parser'
 import {Octokit} from '@octokit/rest'
 import {Actions, EmptyActions} from './github-actions'
 import {createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
-import {ChangedFile, Committer, Method, ValueUpdates, YamlNode} from './types'
+import {ChangedFile, Committer, Format, Method, ValueUpdates, ContentNode} from './types'
 
 const APPEND_ARRAY_EXPRESSION = '[(@.length)]'
 
 export async function run(options: Options, actions: Actions): Promise<void> {
+  if (options.updateFile === true) {
+    actions.info('updateFile is deprected, the updated content will be written to the file by default from now on')
+  }
+
   try {
     const files: ChangedFile[] = []
 
     for (const [file, values] of Object.entries(options.changes)) {
-      const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, actions)
+      const changedFile = processFile(file, options.format, values, options.workDir, options.method, actions)
+
       if (changedFile) {
+        writeTo(changedFile.content, changedFile.absolutePath, actions)
         files.push(changedFile)
       }
     }
@@ -52,11 +59,11 @@ export async function run(options: Options, actions: Actions): Promise<void> {
   }
 }
 
-export async function runTest<T extends YamlNode>(options: Options): Promise<(ChangedFile & {json: T})[]> {
+export async function runTest<T extends ContentNode>(options: Options): Promise<(ChangedFile & {json: T})[]> {
   const files: ChangedFile[] = []
 
   for (const [file, values] of Object.entries(options.changes)) {
-    const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, new EmptyActions())
+    const changedFile = processFile(file, options.format, values, options.workDir, options.method, new EmptyActions())
     if (changedFile) {
       files.push(changedFile)
     }
@@ -65,21 +72,12 @@ export async function runTest<T extends YamlNode>(options: Options): Promise<(Ch
   return files as (ChangedFile & {json: T})[]
 }
 
-export function parseFile<T extends YamlNode>(filePath: string): T {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`could not parse file with path: ${filePath}`)
-  }
-
-  const result: T = YAML.load(fs.readFileSync(filePath, 'utf8')) as T
-
-  if (typeof result !== 'object') {
-    throw new Error(`could not parse content as YAML`)
-  }
-
-  return result
-}
-
-export function replace<T extends YamlNode>(value: string | number | boolean | unknown[], jsonPath: string, content: YamlNode, method: Method): T {
+export function replace<T extends ContentNode>(
+  value: string | number | boolean | unknown[],
+  jsonPath: string,
+  content: ContentNode,
+  method: Method
+): T {
   const copy = JSON.parse(JSON.stringify(content))
 
   if (!jsonPath.startsWith('$')) {
@@ -107,12 +105,8 @@ export function replace<T extends YamlNode>(value: string | number | boolean | u
   return copy
 }
 
-export function convert(yamlContent: YamlNode): string {
-  return YAML.dump(yamlContent, {lineWidth: -1})
-}
-
-export function writeTo(yamlString: string, filePath: string, actions: Actions): void {
-  fs.writeFile(filePath, yamlString, err => {
+export function writeTo(content: string, filePath: string, actions: Actions): void {
+  fs.writeFile(filePath, content, err => {
     if (!err) return
 
     actions.warning(err.message)
@@ -229,56 +223,56 @@ export const convertValue = (value: string): string | number | boolean => {
 
 export function processFile(
   file: string,
+  format: Format,
   values: ValueUpdates,
   workDir: string,
   method: Method,
-  updateFile: boolean,
   actions: Actions
 ): ChangedFile | null {
   const filePath = path.join(process.cwd(), workDir, file)
 
   actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir, valueFile: file})}`)
 
-  let contentNode = parseFile(filePath)
-  let contentYAML = convert(contentNode)
+  format = determineFinalFormat(filePath, format, actions) as Format.JSON | Format.YAML
 
-  const initContent = contentYAML
+  const parser = formatParser[format]
+
+  let contentNode = parser.convert(filePath)
+  let contentString = parser.dump(contentNode)
+
+  const initContent = contentString
 
   actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`)
 
   for (const [propertyPath, value] of Object.entries(values)) {
     contentNode = replace(value, propertyPath, contentNode, method)
-    contentYAML = convert(contentNode)
-
-    actions.debug(`Generated updated YAML
-    
-${contentYAML}
-`)
+    contentString = parser.dump(contentNode)
   }
+
+  actions.debug(`Generated updated ${format.toUpperCase()}
+    
+  ${contentString}
+  `)
 
   // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
-  if (initContent === contentYAML) {
+  if (initContent === contentString) {
     actions.debug(`Nothing changed, skipping rest of the workflow.`)
     return null
-  }
-
-  if (updateFile === true) {
-    writeTo(contentYAML, filePath, actions)
   }
 
   return {
     relativePath: file,
     absolutePath: filePath,
-    content: contentYAML,
+    content: contentString,
     json: contentNode
   }
 }
 
-const pathNotExists = (content: YamlNode, jsonPath: string): boolean => {
+const pathNotExists = (content: ContentNode, jsonPath: string): boolean => {
   return jp.paths(content, jsonPath) && jp.value(content, jsonPath) === undefined
 }
 
-const isAppendArrayNode = (content: YamlNode, jsonPath: string): boolean => {
+const isAppendArrayNode = (content: ContentNode, jsonPath: string): boolean => {
   if (!pathNotExists(content, jsonPath)) {
     return false
   }
@@ -292,4 +286,22 @@ const isAppendArrayNode = (content: YamlNode, jsonPath: string): boolean => {
   const parent = jp.value(content, jsonPath.replace(APPEND_ARRAY_EXPRESSION, ''))
 
   return Array.isArray(parent)
+}
+
+const determineFinalFormat = (filePath: string, format: Format, action: Actions): Format => {
+  // try to guess format from file extension, if not provided
+  if (format !== Format.UNKNOWN) {
+    action.debug(`use ${format.toUpperCase()} format from configuration`)
+    return format
+  }
+
+  format = formatGuesser(filePath)
+  if (format !== Format.UNKNOWN) {
+    action.debug(`use ${format.toUpperCase()} format, guessed from extension: ${filePath}`)
+    return format
+  }
+
+  // use YAML as default if no extension matches
+  action.debug(`use ${Format.YAML.toUpperCase()} format, as fallback`)
+  return Format.YAML
 }

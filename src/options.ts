@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
 import {convertValue, parseChanges} from './helper'
-import {Committer, Changes, Method} from './types'
+import {Committer, Changes, Method, Format} from './types'
 
 export interface Options {
   valueFile: string
@@ -26,6 +26,7 @@ export interface Options {
   workDir: string
   committer: Committer
   changes: Changes
+  format: Format
   method: Method
 }
 
@@ -169,6 +170,16 @@ export class GitHubOptions implements Options {
 
     return Method.CreateOrUpdate
   }
+
+  get format(): Format {
+    const format = (core.getInput('format') || '').toLowerCase() as Format
+
+    if ([Format.YAML, Format.JSON, Format.UNKNOWN].includes(format)) {
+      return format
+    }
+
+    return Format.UNKNOWN
+  }
 }
 
 export class EnvOptions implements Options {
@@ -298,5 +309,15 @@ export class EnvOptions implements Options {
     }
 
     return Method.CreateOrUpdate
+  }
+
+  get format(): Format {
+    const format = (process.env.FORMAT || '').toLowerCase() as Format
+
+    if ([Format.YAML, Format.JSON, Format.UNKNOWN].includes(format)) {
+      return format
+    }
+
+    return Format.UNKNOWN
   }
 }

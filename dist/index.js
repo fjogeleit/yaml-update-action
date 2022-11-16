@@ -19,11 +19,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.processFile = exports.convertValue = exports.createPullRequest = exports.gitProcessing = exports.writeTo = exports.convert = exports.replace = exports.parseFile = exports.runTest = exports.run = void 0;
+exports.processFile = exports.convertValue = exports.createPullRequest = exports.gitProcessing = exports.writeTo = exports.replace = exports.runTest = exports.run = void 0;
 const js_yaml_1 = __importDefault(__nccwpck_require__(1917));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const jsonpath_1 = __importDefault(__nccwpck_require__(4378));
+const parser_1 = __nccwpck_require__(267);
 const rest_1 = __nccwpck_require__(5375);
 const github_actions_1 = __nccwpck_require__(6905);
 const git_commands_1 = __nccwpck_require__(4703);
@@ -31,11 +32,15 @@ const types_1 = __nccwpck_require__(8164);
 const APPEND_ARRAY_EXPRESSION = '[(@.length)]';
 function run(options, actions) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (options.updateFile === true) {
+            actions.info('updateFile is deprected, the updated content will be written to the file by default from now on');
+        }
         try {
             const files = [];
             for (const [file, values] of Object.entries(options.changes)) {
-                const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, actions);
+                const changedFile = processFile(file, options.format, values, options.workDir, options.method, actions);
                 if (changedFile) {
+                    writeTo(changedFile.content, changedFile.absolutePath, actions);
                     files.push(changedFile);
                 }
             }
@@ -60,7 +65,7 @@ function runTest(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
         for (const [file, values] of Object.entries(options.changes)) {
-            const changedFile = processFile(file, values, options.workDir, options.method, options.updateFile, new github_actions_1.EmptyActions());
+            const changedFile = processFile(file, options.format, values, options.workDir, options.method, new github_actions_1.EmptyActions());
             if (changedFile) {
                 files.push(changedFile);
             }
@@ -69,17 +74,6 @@ function runTest(options) {
     });
 }
 exports.runTest = runTest;
-function parseFile(filePath) {
-    if (!fs_1.default.existsSync(filePath)) {
-        throw new Error(`could not parse file with path: ${filePath}`);
-    }
-    const result = js_yaml_1.default.load(fs_1.default.readFileSync(filePath, 'utf8'));
-    if (typeof result !== 'object') {
-        throw new Error(`could not parse content as YAML`);
-    }
-    return result;
-}
-exports.parseFile = parseFile;
 function replace(value, jsonPath, content, method) {
     const copy = JSON.parse(JSON.stringify(content));
     if (!jsonPath.startsWith('$')) {
@@ -101,12 +95,8 @@ function replace(value, jsonPath, content, method) {
     return copy;
 }
 exports.replace = replace;
-function convert(yamlContent) {
-    return js_yaml_1.default.dump(yamlContent, { lineWidth: -1 });
-}
-exports.convert = convert;
-function writeTo(yamlString, filePath, actions) {
-    fs_1.default.writeFile(filePath, yamlString, err => {
+function writeTo(content, filePath, actions) {
+    fs_1.default.writeFile(filePath, content, err => {
         if (!err)
             return;
         actions.warning(err.message);
@@ -184,33 +174,32 @@ const convertValue = (value) => {
     return result[0];
 };
 exports.convertValue = convertValue;
-function processFile(file, values, workDir, method, updateFile, actions) {
+function processFile(file, format, values, workDir, method, actions) {
     const filePath = path_1.default.join(process.cwd(), workDir, file);
     actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir, valueFile: file })}`);
-    let contentNode = parseFile(filePath);
-    let contentYAML = convert(contentNode);
-    const initContent = contentYAML;
+    format = determineFinalFormat(filePath, format, actions);
+    const parser = parser_1.formatParser[format];
+    let contentNode = parser.convert(filePath);
+    let contentString = parser.dump(contentNode);
+    const initContent = contentString;
     actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`);
     for (const [propertyPath, value] of Object.entries(values)) {
         contentNode = replace(value, propertyPath, contentNode, method);
-        contentYAML = convert(contentNode);
-        actions.debug(`Generated updated YAML
-    
-${contentYAML}
-`);
+        contentString = parser.dump(contentNode);
     }
+    actions.debug(`Generated updated ${format.toUpperCase()}
+    
+  ${contentString}
+  `);
     // if nothing changed, do not commit, do not create PR's, skip the rest of the workflow
-    if (initContent === contentYAML) {
+    if (initContent === contentString) {
         actions.debug(`Nothing changed, skipping rest of the workflow.`);
         return null;
-    }
-    if (updateFile === true) {
-        writeTo(contentYAML, filePath, actions);
     }
     return {
         relativePath: file,
         absolutePath: filePath,
-        content: contentYAML,
+        content: contentString,
         json: contentNode
     };
 }
@@ -228,6 +217,21 @@ const isAppendArrayNode = (content, jsonPath) => {
     jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '');
     const parent = jsonpath_1.default.value(content, jsonPath.replace(APPEND_ARRAY_EXPRESSION, ''));
     return Array.isArray(parent);
+};
+const determineFinalFormat = (filePath, format, action) => {
+    // try to guess format from file extension, if not provided
+    if (format !== types_1.Format.UNKNOWN) {
+        action.debug(`use ${format.toUpperCase()} format from configuration`);
+        return format;
+    }
+    format = (0, parser_1.formatGuesser)(filePath);
+    if (format !== types_1.Format.UNKNOWN) {
+        action.debug(`use ${format.toUpperCase()} format, guessed from extension: ${filePath}`);
+        return format;
+    }
+    // use YAML as default if no extension matches
+    action.debug(`use ${types_1.Format.YAML.toUpperCase()} format, as fallback`);
+    return types_1.Format.YAML;
 };
 
 
@@ -657,6 +661,13 @@ class GitHubOptions {
         }
         return types_1.Method.CreateOrUpdate;
     }
+    get format() {
+        const format = (core.getInput('format') || '').toLowerCase();
+        if ([types_1.Format.YAML, types_1.Format.JSON, types_1.Format.UNKNOWN].includes(format)) {
+            return format;
+        }
+        return types_1.Format.UNKNOWN;
+    }
 }
 exports.GitHubOptions = GitHubOptions;
 class EnvOptions {
@@ -761,8 +772,79 @@ class EnvOptions {
         }
         return types_1.Method.CreateOrUpdate;
     }
+    get format() {
+        const format = (process.env.FORMAT || '').toLowerCase();
+        if ([types_1.Format.YAML, types_1.Format.JSON, types_1.Format.UNKNOWN].includes(format)) {
+            return format;
+        }
+        return types_1.Format.UNKNOWN;
+    }
 }
 exports.EnvOptions = EnvOptions;
+
+
+/***/ }),
+
+/***/ 267:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.formatParser = exports.formatGuesser = void 0;
+const js_yaml_1 = __importDefault(__nccwpck_require__(1917));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const types_1 = __nccwpck_require__(8164);
+const formatGuesser = (filename) => {
+    if (filename.endsWith(types_1.Format.JSON)) {
+        return types_1.Format.JSON;
+    }
+    if (filename.endsWith(types_1.Format.YAML) || filename.endsWith('yml')) {
+        return types_1.Format.YAML;
+    }
+    return types_1.Format.UNKNOWN;
+};
+exports.formatGuesser = formatGuesser;
+const readFile = (filePath) => {
+    if (!fs_1.default.existsSync(filePath)) {
+        throw new Error(`could not parse file with path: ${filePath}`);
+    }
+    return fs_1.default.readFileSync(filePath, 'utf8');
+};
+const validateContent = (content, format) => {
+    if (typeof content !== 'object') {
+        throw new Error(`could not parse content as ${format.toUpperCase()}`);
+    }
+    return content;
+};
+const YAMLParser = {
+    convert(filePath) {
+        return validateContent(js_yaml_1.default.load(readFile(filePath)), types_1.Format.YAML);
+    },
+    dump(content) {
+        return js_yaml_1.default.dump(content, { lineWidth: -1 });
+    }
+};
+const JSONParser = {
+    convert(filePath) {
+        try {
+            return validateContent(JSON.parse(readFile(filePath)), types_1.Format.JSON);
+        }
+        catch (_a) {
+            return validateContent(undefined, types_1.Format.JSON);
+        }
+    },
+    dump(content) {
+        return JSON.stringify(content, null, 2);
+    }
+};
+exports.formatParser = {
+    [types_1.Format.JSON]: JSONParser,
+    [types_1.Format.YAML]: YAMLParser
+};
 
 
 /***/ }),
@@ -773,13 +855,19 @@ exports.EnvOptions = EnvOptions;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Method = void 0;
+exports.Format = exports.Method = void 0;
 var Method;
 (function (Method) {
     Method["CreateOrUpdate"] = "createorupdate";
     Method["Update"] = "update";
     Method["Create"] = "create";
 })(Method = exports.Method || (exports.Method = {}));
+var Format;
+(function (Format) {
+    Format["YAML"] = "yaml";
+    Format["JSON"] = "json";
+    Format["UNKNOWN"] = "";
+})(Format = exports.Format || (exports.Format = {}));
 
 
 /***/ }),
