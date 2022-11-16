@@ -1,6 +1,6 @@
 # YAML Update Action
 
-Update valuew in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
+Update values in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
 
 
 ## Use Cases
