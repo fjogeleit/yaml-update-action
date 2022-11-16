@@ -88,7 +88,7 @@ inputs:
     description: List of reviewers for the created Pull Request, if enabled
     required: false
     default: ''
-  teanReviewers:
+  teamReviewers:
     description: List of team reviewers for the created Pull Request, if enabled
     required: false
     default: ''
