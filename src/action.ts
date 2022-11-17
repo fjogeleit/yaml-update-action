@@ -20,7 +20,7 @@ export async function run(options: Options, actions: Actions): Promise<void> {
     const files: ChangedFile[] = []
 
     for (const [file, values] of Object.entries(options.changes)) {
-      const changedFile = processFile(file, options.format, values, options.workDir, options.method, actions)
+      const changedFile = processFile(file, values, options, actions)
 
       if (changedFile) {
         writeTo(changedFile.content, changedFile.absolutePath, actions)
@@ -63,7 +63,7 @@ export async function runTest<T extends ContentNode>(options: Options): Promise<
   const files: ChangedFile[] = []
 
   for (const [file, values] of Object.entries(options.changes)) {
-    const changedFile = processFile(file, options.format, values, options.workDir, options.method, new EmptyActions())
+    const changedFile = processFile(file, values, options, new EmptyActions())
     if (changedFile) {
       files.push(changedFile)
     }
@@ -221,32 +221,25 @@ export const convertValue = (value: string): string | number | boolean => {
   return result[0]
 }
 
-export function processFile(
-  file: string,
-  format: Format,
-  values: ValueUpdates,
-  workDir: string,
-  method: Method,
-  actions: Actions
-): ChangedFile | null {
-  const filePath = path.join(process.cwd(), workDir, file)
+export function processFile(file: string, values: ValueUpdates, options: Options, actions: Actions): ChangedFile | null {
+  const filePath = path.join(process.cwd(), options.workDir, file)
 
-  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir, valueFile: file})}`)
+  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir: options.workDir, valueFile: file})}`)
 
-  format = determineFinalFormat(filePath, format, actions) as Format.JSON | Format.YAML
+  const format = determineFinalFormat(filePath, options.format, actions) as Format.JSON | Format.YAML
 
   const parser = formatParser[format]
 
   let contentNode = parser.convert(filePath)
-  let contentString = parser.dump(contentNode)
+  let contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode})
 
   const initContent = contentString
 
   actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`)
 
   for (const [propertyPath, value] of Object.entries(values)) {
-    contentNode = replace(value, propertyPath, contentNode, method)
-    contentString = parser.dump(contentNode)
+    contentNode = replace(value, propertyPath, contentNode, options.method)
+    contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode})
   }
 
   actions.debug(`Generated updated ${format.toUpperCase()}
