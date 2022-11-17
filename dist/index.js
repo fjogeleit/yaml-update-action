@@ -825,7 +825,7 @@ const YAMLParser = {
         return validateContent(js_yaml_1.default.load(readFile(filePath)), types_1.Format.YAML);
     },
     dump(content) {
-        return js_yaml_1.default.dump(content, { lineWidth: -1 });
+        return js_yaml_1.default.dump(content, { lineWidth: -1, noCompatMode: true });
     }
 };
 const JSONParser = {
