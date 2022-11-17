@@ -28,6 +28,7 @@ export interface Options {
   changes: Changes
   format: Format
   method: Method
+  noCompatMode: boolean
 }
 
 export class GitHubOptions implements Options {
@@ -48,11 +49,11 @@ export class GitHubOptions implements Options {
   }
 
   get commitChange(): boolean {
-    return core.getInput('commitChange') === 'true'
+    return core.getBooleanInput('commitChange')
   }
 
   get updateFile(): boolean {
-    return core.getInput('updateFile') === 'true'
+    return core.getBooleanInput('updateFile')
   }
 
   get targetBranch(): string {
@@ -68,7 +69,11 @@ export class GitHubOptions implements Options {
   }
 
   get createPR(): boolean {
-    return core.getInput('createPR') === 'true'
+    return core.getBooleanInput('createPR')
+  }
+
+  get noCompatMode(): boolean {
+    return core.getBooleanInput('noCompatMode')
   }
 
   get token(): string {
@@ -221,6 +226,10 @@ export class EnvOptions implements Options {
 
   get createPR(): boolean {
     return process.env.CREATE_PR === 'true'
+  }
+
+  get noCompatMode(): boolean {
+    return process.env.NO_COMPAT_MODE === 'true'
   }
 
   get message(): string {

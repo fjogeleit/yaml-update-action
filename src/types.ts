@@ -37,5 +37,5 @@ export enum Format {
 
 export type FormatParser = {
   convert<T extends ContentNode>(filePath: string): T
-  dump<T extends ContentNode>(content: T): string
+  dump<T extends ContentNode>(content: T, options?: {[key: string]: string | boolean | number}): string
 }

@@ -93,6 +93,7 @@ jobs:
 |workDir     | Relative location of the configured `repository` | .                            |                     |
 |format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
 |method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
+|noCompatMode| Removes quotes from reserved words, like Y, N, yes, no, on, etc.                 | `false`            |
 
 #### Methods
 
