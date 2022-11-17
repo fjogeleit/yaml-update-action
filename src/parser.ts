@@ -34,7 +34,7 @@ const YAMLParser = {
     return validateContent<T>(YAML.load(readFile(filePath)) as T, Format.YAML)
   },
   dump<T extends ContentNode>(content: T): string {
-    return YAML.dump(content, {lineWidth: -1})
+    return YAML.dump(content, {lineWidth: -1, noCompatMode: true})
   }
 }
 
