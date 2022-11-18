@@ -1,13 +1,13 @@
 # YAML Update Action
 
-Update a single value in an existing YAML File. Push this updated YAML to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
+Update values in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
 
 
 ## Use Cases
 
 ### Change a local YAML file without commiting the change
 
-By default the actual file in your workspace did not change. This Action creates an in memory copy of your YAML file and sends it to GitHub via the REST API. To achieve an actual update of your local YAML file within your workflow use the following configuration:
+With the latest release, the content of your actual file will be updated by default. So, you just need to skip the commit of your change.
 
 ```yaml
 name: 'workflow'
@@ -20,7 +20,7 @@ jobs:
   test-update-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Update values.yaml
         uses: fjogeleit/yaml-update-action@main
         with:
@@ -28,7 +28,6 @@ jobs:
           propertyPath: 'file.version'
           value: v1.0.1
           commitChange: false
-          updateFile: true
 ```
 
 ### Update Helm Chart after a new Docker Image was build
@@ -43,7 +42,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build app image
         run: docker build . --tag image
@@ -79,7 +78,7 @@ jobs:
           message: 'Update Image Version to ${{ steps.image.outputs.version }}' 
 ```
 
-### Input Arguments
+## Input Arguments
 
 ### Base Configurations
 
@@ -88,10 +87,24 @@ jobs:
 |valueFile   | relative path from the Workspace Directory                                      | _required_ Field    |
 |propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field    |
 |value       | New value for the related PropertyPath                                          | _required_ Field    |
-|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{ "filepath": { "propertyPath": "value"}}` and `{ "propertyPath": "value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
+|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
 |labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
-|updateFile  | By default the actual file is not updated, to do so set this property to 'true' | `false`             |
-|workDir     | relative location of the configured `repository` | .                            |                     |
+|updateFile  | **(deprected)** the updated content will be written into the actual file by default | `false`             |
+|workDir     | Relative location of the configured `repository` | .                            |                     |
+|format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
+|method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
+|noCompatMode| Removes quotes from reserved words, like Y, N, yes, no, on, etc.                 | `false`            |
+
+#### Methods
+
+Determine the behavior for none existing properties or array elements.
+
+| Enum           | Description |
+|----------------|-------------|
+| CreateOrUpdate | Updates existing values or creates them if not available |
+| Update         | Updates existing values, skips the change if not |
+| Create         | Creates none existing values, skips the change if the property already exists |
+
 ### Git related Configurations
 
 |Argument        |  Description                                                                                                |  Default               |
@@ -115,18 +128,75 @@ jobs:
 - `commit` Git Commit SHA
 - `pull_request` Git PR Informations
 
-### Debug Informations
+## Debug Informations
 
 Enable Debug mode to get informations about
 
 - YAML parse and update results
 - Git Steps
 
-### Known Issues
+## Known Issues
 
 In this first version the updated YAML file will not be patched. It is parsed into JSON, after the update its converted back to YAML. This means that comments and blank lines will be removed in this process and the intend of the updated content can be different to the previous.
 
 By default each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
+
+## Examples
+
+### Multi Value Changes
+
+```yaml
+jobs:
+  test-multiple-value-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'deployment/helm/values.yaml'
+          branch: deployment/dev
+          targetBranch: main
+          createPR: 'true'
+          description: Test GitHub Action
+          message: 'Update All Images' 
+          title: 'Version Updates '
+          changes: |
+            {
+              "backend.version": "${{ steps.image.outputs.backend.version }}",
+              "frontend.version": "${{ steps.image.outputs.frontend.version }}"
+            }
+```
+
+### Multi File Changes
+
+```yaml
+jobs:
+  test-multiple-file-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'deployment/helm/values.yaml'
+          branch: deployment/v1.0.1
+          targetBranch: main
+          createPR: 'true'
+          description: Test GitHub Action
+          message: 'Update All Images' 
+          title: 'Version Updates '
+          changes: |
+            {
+              "__tests__/fixtures/values.dev.yaml": {
+                "backend.version": "v1.0.1"
+              },
+              "__tests__/fixtures/values.stage.yaml": {
+                "backend.version": "v1.0.1"
+              },
+              "__tests__/fixtures/values.prod.yaml": {
+                "backend.version": "v1.0.1"
+              }
+            }
+```
 
 ### Advaned Example with an separate target repository
 
@@ -138,7 +208,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
             path: main
 
@@ -157,7 +227,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
 
       - name: Checkout Target Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: owner/target-repository
           path: infrastructure

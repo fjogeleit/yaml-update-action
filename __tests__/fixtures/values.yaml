@@ -6,7 +6,6 @@ containers:
     image: nginx:latest
   - name: node
     image: node:latest
-config: {
+config:
   prod: false,
   version: 0
-}

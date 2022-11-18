@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
 import {convertValue, parseChanges} from './helper'
-import {Committer, Changes} from './types'
+import {Committer, Changes, Method, Format} from './types'
 
 export interface Options {
   valueFile: string
@@ -26,6 +26,9 @@ export interface Options {
   workDir: string
   committer: Committer
   changes: Changes
+  format: Format
+  method: Method
+  noCompatMode: boolean
 }
 
 export class GitHubOptions implements Options {
@@ -46,11 +49,11 @@ export class GitHubOptions implements Options {
   }
 
   get commitChange(): boolean {
-    return core.getInput('commitChange') === 'true'
+    return core.getBooleanInput('commitChange')
   }
 
   get updateFile(): boolean {
-    return core.getInput('updateFile') === 'true'
+    return core.getBooleanInput('updateFile')
   }
 
   get targetBranch(): string {
@@ -66,7 +69,11 @@ export class GitHubOptions implements Options {
   }
 
   get createPR(): boolean {
-    return core.getInput('createPR') === 'true'
+    return core.getBooleanInput('createPR')
+  }
+
+  get noCompatMode(): boolean {
+    return core.getBooleanInput('noCompatMode')
   }
 
   get token(): string {
@@ -158,6 +165,26 @@ export class GitHubOptions implements Options {
 
     return parseChanges(changes, this.valueFile, core.getInput('changes'))
   }
+
+  get method(): Method {
+    const method = (core.getInput('method') || '').toLowerCase() as Method
+
+    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+      return method
+    }
+
+    return Method.CreateOrUpdate
+  }
+
+  get format(): Format {
+    const format = (core.getInput('format') || '').toLowerCase() as Format
+
+    if ([Format.YAML, Format.JSON, Format.UNKNOWN].includes(format)) {
+      return format
+    }
+
+    return Format.UNKNOWN
+  }
 }
 
 export class EnvOptions implements Options {
@@ -199,6 +226,10 @@ export class EnvOptions implements Options {
 
   get createPR(): boolean {
     return process.env.CREATE_PR === 'true'
+  }
+
+  get noCompatMode(): boolean {
+    return process.env.NO_COMPAT_MODE === 'true'
   }
 
   get message(): string {
@@ -277,5 +308,25 @@ export class EnvOptions implements Options {
     }
 
     return parseChanges(changes, this.valueFile, process.env.CHANGES || '')
+  }
+
+  get method(): Method {
+    const method = (process.env.METHOD || '').toLowerCase() as Method
+
+    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+      return process.env.METHOD as Method
+    }
+
+    return Method.CreateOrUpdate
+  }
+
+  get format(): Format {
+    const format = (process.env.FORMAT || '').toLowerCase() as Format
+
+    if ([Format.YAML, Format.JSON, Format.UNKNOWN].includes(format)) {
+      return format
+    }
+
+    return Format.UNKNOWN
   }
 }
