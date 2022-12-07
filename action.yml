@@ -14,6 +14,7 @@ inputs:
   noCompatMode:
     required: false
     description: 'Removes quotes from reserved words, like Y, N, yes, no, on, etc.'
+    default: 'false'
   format:
     required: false
     description: 'Supported file formats, possible values are YAML and JSON, will be guessed by file extension if not provided. Falls back to YAML'
