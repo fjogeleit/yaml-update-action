@@ -84,11 +84,10 @@ jobs:
 
 |Argument    |  Description                                                                    |  Default            |
 |------------|---------------------------------------------------------------------------------|---------------------|
-|valueFile   | relative path from the Workspace Directory                                      | _required_ Field    |
-|propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field    |
-|value       | New value for the related PropertyPath                                          | _required_ Field    |
+|valueFile   | relative path from the Workspace Directory                                      | _required_ Field if `changes` is not used |
+|propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field if `changes` is not used |
+|value       | New value for the related PropertyPath                                          | _required_ Field if `changes` is not used |
 |changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
-|labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                    | 'yaml-updates'      |
 |updateFile  | **(deprected)** the updated content will be written into the actual file by default | `false`             |
 |workDir     | Relative location of the configured `repository` | .                            |                     |
 |format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
@@ -111,6 +110,7 @@ Determine the behavior for none existing properties or array elements.
 |----------------|-------------------------------------------------------------------------------------------------------------|------------------------|
 |commitChange    | Commit the change to __branch__ with the given __message__                                                  | `true`                 |
 |message         | Commit message for the changed YAML file                                                                    | ''                     |
+|labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                                                    | 'yaml-updates'         |
 |createPR        | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                    | `true`                 |
 |title           | Custom title for the created Pull Request                                                                   | 'Merge: {{message}}'   |
 |description     | Custom description for the created Pull Request                                                             | ''                     |

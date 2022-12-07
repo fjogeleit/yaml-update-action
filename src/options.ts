@@ -148,7 +148,7 @@ export class GitHubOptions implements Options {
   }
 
   get changes(): Changes {
-    const changes: Changes = {}
+    let changes: Changes = {}
     if (this.valueFile && this.propertyPath) {
       let value: string | number | boolean = this.value
 
@@ -163,7 +163,12 @@ export class GitHubOptions implements Options {
       }
     }
 
-    return parseChanges(changes, this.valueFile, core.getInput('changes'))
+    changes = parseChanges(changes, this.valueFile, core.getInput('changes'))
+    if (Object.keys(changes).length === 0) {
+      core.setFailed('No changes to update detected')
+    }
+
+    return changes
   }
 
   get method(): Method {

@@ -145,7 +145,7 @@ export async function gitProcessing(
   actions.debug(JSON.stringify({createdCommit: newCommitSha}))
   actions.setOutput('commit', newCommitSha)
 
-  await updateBranch(octokit, owner, repo, branch, newCommitSha)
+  await updateBranch(octokit, owner, repo, branch, newCommitSha, actions)
 
   actions.debug(`Complete`)
 }

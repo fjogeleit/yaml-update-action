@@ -3,13 +3,13 @@ description: 'Update the property of an existing YAML File'
 author: 'Frank Jogeleit <frank.jogeleit@web.de>'
 inputs:
   valueFile:
-    required: true
+    required: false
     description: 'YAML file which should be updated'
   propertyPath:
-    required: true
+    required: false
     description: 'Property Path - valid jsonPath expression'
   value:
-    required: true
+    required: false
     description: 'New property value'
   noCompatMode:
     required: false

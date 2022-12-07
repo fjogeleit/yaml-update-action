@@ -1,4 +1,5 @@
 import {Octokit} from '@octokit/rest'
+import {Actions} from './github-actions'
 import {Committer, ChangedFile} from './types'
 
 export type GitCreateTreeParamsTree = {
@@ -116,7 +117,14 @@ export const createNewCommit = async (
   return data.sha
 }
 
-export const updateBranch = async (octo: Octokit, owner: string, repo: string, branch: string, commitSha: string): Promise<void> => {
+export const updateBranch = async (
+  octo: Octokit,
+  owner: string,
+  repo: string,
+  branch: string,
+  commitSha: string,
+  actions: Actions
+): Promise<void> => {
   try {
     await octo.git.updateRef({
       owner,
@@ -124,13 +132,17 @@ export const updateBranch = async (octo: Octokit, owner: string, repo: string, b
       ref: `heads/${branch}`,
       sha: commitSha
     })
-  } catch (e) {
-    await octo.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${branch}`,
-      sha: commitSha
-    })
+  } catch (error) {
+    actions.info(`update branch ${branch} failed (${error}), fallback to create branch`)
+
+    await octo.git
+      .createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branch}`,
+        sha: commitSha
+      })
+      .catch(e => actions.setFailed(`failed to create branch: ${e}`))
   }
 }
 
