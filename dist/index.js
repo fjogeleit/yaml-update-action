@@ -38,7 +38,7 @@ function run(options, actions) {
         try {
             const files = [];
             for (const [file, values] of Object.entries(options.changes)) {
-                const changedFile = processFile(file, options.format, values, options.workDir, options.method, actions);
+                const changedFile = processFile(file, values, options, actions);
                 if (changedFile) {
                     writeTo(changedFile.content, changedFile.absolutePath, actions);
                     files.push(changedFile);
@@ -65,7 +65,7 @@ function runTest(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = [];
         for (const [file, values] of Object.entries(options.changes)) {
-            const changedFile = processFile(file, options.format, values, options.workDir, options.method, new github_actions_1.EmptyActions());
+            const changedFile = processFile(file, values, options, new github_actions_1.EmptyActions());
             if (changedFile) {
                 files.push(changedFile);
             }
@@ -119,7 +119,7 @@ function gitProcessing(repository, branch, masterBranchName, files, commitMessag
         const newCommitSha = yield (0, git_commands_1.createNewCommit)(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer);
         actions.debug(JSON.stringify({ createdCommit: newCommitSha }));
         actions.setOutput('commit', newCommitSha);
-        yield (0, git_commands_1.updateBranch)(octokit, owner, repo, branch, newCommitSha);
+        yield (0, git_commands_1.updateBranch)(octokit, owner, repo, branch, newCommitSha, actions);
         actions.debug(`Complete`);
     });
 }
@@ -174,18 +174,18 @@ const convertValue = (value) => {
     return result[0];
 };
 exports.convertValue = convertValue;
-function processFile(file, format, values, workDir, method, actions) {
-    const filePath = path_1.default.join(process.cwd(), workDir, file);
-    actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir, valueFile: file })}`);
-    format = determineFinalFormat(filePath, format, actions);
+function processFile(file, values, options, actions) {
+    const filePath = path_1.default.join(process.cwd(), options.workDir, file);
+    actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir: options.workDir, valueFile: file })}`);
+    const format = determineFinalFormat(filePath, options.format, actions);
     const parser = parser_1.formatParser[format];
     let contentNode = parser.convert(filePath);
-    let contentString = parser.dump(contentNode);
+    let contentString = parser.dump(contentNode, { noCompatMode: options.noCompatMode });
     const initContent = contentString;
     actions.debug(`Parsed JSON: ${JSON.stringify(contentNode)}`);
     for (const [propertyPath, value] of Object.entries(values)) {
-        contentNode = replace(value, propertyPath, contentNode, method);
-        contentString = parser.dump(contentNode);
+        contentNode = replace(value, propertyPath, contentNode, options.method);
+        contentString = parser.dump(contentNode, { noCompatMode: options.noCompatMode });
     }
     actions.debug(`Generated updated ${format.toUpperCase()}
     
@@ -329,7 +329,7 @@ const createNewCommit = (octo, owner, repo, message, treeSha, commitSha, author)
     return data.sha;
 });
 exports.createNewCommit = createNewCommit;
-const updateBranch = (octo, owner, repo, branch, commitSha) => __awaiter(void 0, void 0, void 0, function* () {
+const updateBranch = (octo, owner, repo, branch, commitSha, actions) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield octo.git.updateRef({
             owner,
@@ -338,13 +338,16 @@ const updateBranch = (octo, owner, repo, branch, commitSha) => __awaiter(void 0,
             sha: commitSha
         });
     }
-    catch (e) {
-        yield octo.git.createRef({
+    catch (error) {
+        actions.info(`update branch ${branch} failed (${error}), fallback to create branch`);
+        yield octo.git
+            .createRef({
             owner,
             repo,
             ref: `refs/heads/${branch}`,
             sha: commitSha
-        });
+        })
+            .catch(e => actions.setFailed(`failed to create branch: ${e}`));
     }
 });
 exports.updateBranch = updateBranch;
@@ -561,10 +564,10 @@ class GitHubOptions {
         return core.getInput('branch');
     }
     get commitChange() {
-        return core.getInput('commitChange') === 'true';
+        return core.getBooleanInput('commitChange');
     }
     get updateFile() {
-        return core.getInput('updateFile') === 'true';
+        return core.getBooleanInput('updateFile');
     }
     get targetBranch() {
         return core.getInput('targetBranch');
@@ -576,7 +579,10 @@ class GitHubOptions {
         return core.getInput('githubAPI');
     }
     get createPR() {
-        return core.getInput('createPR') === 'true';
+        return core.getBooleanInput('createPR');
+    }
+    get noCompatMode() {
+        return core.getBooleanInput('noCompatMode');
     }
     get token() {
         return core.getInput('token');
@@ -639,7 +645,7 @@ class GitHubOptions {
         };
     }
     get changes() {
-        const changes = {};
+        let changes = {};
         if (this.valueFile && this.propertyPath) {
             let value = this.value;
             try {
@@ -652,7 +658,11 @@ class GitHubOptions {
                 [this.propertyPath]: value
             };
         }
-        return (0, helper_1.parseChanges)(changes, this.valueFile, core.getInput('changes'));
+        changes = (0, helper_1.parseChanges)(changes, this.valueFile, core.getInput('changes'));
+        if (Object.keys(changes).length === 0) {
+            core.setFailed('No changes to update detected');
+        }
+        return changes;
     }
     get method() {
         const method = (core.getInput('method') || '').toLowerCase();
@@ -700,6 +710,9 @@ class EnvOptions {
     }
     get createPR() {
         return process.env.CREATE_PR === 'true';
+    }
+    get noCompatMode() {
+        return process.env.NO_COMPAT_MODE === 'true';
     }
     get message() {
         return process.env.MESSAGE || '';
@@ -824,8 +837,8 @@ const YAMLParser = {
     convert(filePath) {
         return validateContent(js_yaml_1.default.load(readFile(filePath)), types_1.Format.YAML);
     },
-    dump(content) {
-        return js_yaml_1.default.dump(content, { lineWidth: -1, noCompatMode: true });
+    dump(content, options) {
+        return js_yaml_1.default.dump(content, { lineWidth: -1, noCompatMode: options === null || options === void 0 ? void 0 : options.noCompatMode });
     }
 };
 const JSONParser = {

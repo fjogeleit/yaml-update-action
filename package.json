@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.8.0",
+  "name": "yaml-update-action",
+  "version": "0.12.2",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Update YAML property with dynamic values",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
