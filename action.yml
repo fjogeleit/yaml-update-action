@@ -23,7 +23,7 @@ inputs:
     description: 'Configures the processing of none existing properties. Possible values: CreateOrUpdate, Update, Create'
   changes:
     required: false
-    description: 'Map of changes for a single or multiple files as JSON. Supports following formats: { "filepath": {"propertyPath": "value"}} or {"propertyPath": "value"}. If filepath is not provided it fallsback to the path configured under valueFile.'
+    description: 'Map of changes for a single or multiple files as JSON. Supports following formats: { "filepath": {"propertyPath": "value"}} or {"propertyPath": "value"}. If filepath is not provided it falls back to the path configured under valueFile.'
   branch:
     required: false
     description: 'Branch to commit the change, will be created if not exist'
@@ -83,11 +83,11 @@ inputs:
   commitUserName:
     description: Name used for the commit user
     required: false
-    default: GitHub Actions
+    default: 'github-actions[bot]'
   commitUserEmail:
     description: Email address used for the commit user
     required: false
-    default: actions@github.com
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
   reviewers:
     description: List of reviewers for the created Pull Request, if enabled
     required: false
