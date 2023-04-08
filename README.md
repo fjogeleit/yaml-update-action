@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        uses: fjogeleit/yaml-update-action@main
+      - uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
           branch: deployment/dev
@@ -175,7 +175,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        uses: fjogeleit/yaml-update-action@main
+      - uses: fjogeleit/yaml-update-action@main
         with:
           valueFile: 'deployment/helm/values.yaml'
           branch: deployment/v1.0.1
