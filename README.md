@@ -1,11 +1,11 @@
 # YAML Update Action
 
-Update values in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also posible to change the file locally without commiting the change.
+Update values in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also possible to change the file locally without committing the change.
 
 
 ## Use Cases
 
-### Change a local YAML file without commiting the change
+### Change a local YAML file without committing the change
 
 With the latest release, the content of your actual file will be updated by default. So, you just need to skip the commit of your change.
 
@@ -82,55 +82,55 @@ jobs:
 
 ### Base Configurations
 
-|Argument    |  Description                                                                    |  Default            |
-|------------|---------------------------------------------------------------------------------|---------------------|
-|valueFile   | relative path from the Workspace Directory                                      | _required_ Field if `changes` is not used |
-|propertyPath| PropertyPath for the new value, JSONPath supported                              | _required_ Field if `changes` is not used |
-|value       | New value for the related PropertyPath                                          | _required_ Field if `changes` is not used |
-|changes     | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput.  ||
-|updateFile  | **(deprected)** the updated content will be written into the actual file by default | `false`             |
-|workDir     | Relative location of the configured `repository` | .                            |                     |
-|format      | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON` ||
-|method      | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create` | `CreateOrUpdate` |
-|noCompatMode| Removes quotes from reserved words, like Y, N, yes, no, on, etc.                 | `false`            |
+| Argument     | Description                                                                                                                                                                                                                                                                     | Default                                   |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| valueFile    | relative path from the Workspace Directory                                                                                                                                                                                                                                      | _required_ Field if `changes` is not used |
+| propertyPath | PropertyPath for the new value, JSONPath supported                                                                                                                                                                                                                              | _required_ Field if `changes` is not used |
+| value        | New value for the related PropertyPath                                                                                                                                                                                                                                          | _required_ Field if `changes` is not used |
+| changes      | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput. |                                           |
+| updateFile   | **(deprecated)** the updated content will be written into the actual file by default                                                                                                                                                                                            | `false`                                   |
+| workDir      | Relative location of the configured `repository`                                                                                                                                                                                                                                | .                                         |                     |
+| format       | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON`                                                                                                                            |                                           |
+| method       | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create`                                                                                                                                                                    | `CreateOrUpdate`                          |
+| noCompatMode | Removes quotes from reserved words, like Y, N, yes, no, on, etc.                                                                                                                                                                                                                | `false`                                   |
 
 #### Methods
 
 Determine the behavior for none existing properties or array elements.
 
-| Enum           | Description |
-|----------------|-------------|
-| CreateOrUpdate | Updates existing values or creates them if not available |
-| Update         | Updates existing values, skips the change if not |
+| Enum           | Description                                                                   |
+|----------------|-------------------------------------------------------------------------------|
+| CreateOrUpdate | Updates existing values or creates them if not available                      |
+| Update         | Updates existing values, skips the change if not                              |
 | Create         | Creates none existing values, skips the change if the property already exists |
 
 ### Git related Configurations
 
-|Argument        |  Description                                                                                                |  Default               |
-|----------------|-------------------------------------------------------------------------------------------------------------|------------------------|
-|commitChange    | Commit the change to __branch__ with the given __message__                                                  | `true`                 |
-|message         | Commit message for the changed YAML file                                                                    | ''                     |
-|labels      | Comma separated list of labels, e.g. "feature, yaml-updates"                                                    | 'yaml-updates'         |
-|createPR        | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                    | `true`                 |
-|title           | Custom title for the created Pull Request                                                                   | 'Merge: {{message}}'   |
-|description     | Custom description for the created Pull Request                                                             | ''                     |
-|targetBranch    | Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true'                                | `master`               |
-|repository      | The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below                                         | ${{github.repository}} |
-|branch          | The updated YAML file will be commited to this branch, branch will be created if not exists                 | `master`               |
-|masterBranchName| Branch name of your master branch                                                                           | `master`               |
-|githubAPI       | BaseURL for all GitHub REST API requests                                                                    | https://api.github.com |
-|token           | GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}      |
+| Argument         | Description                                                                                                                                                                                                      | Default                                               |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| commitChange     | Commit the change to __branch__ with the given __message__                                                                                                                                                       | `true`                                                |
+| message          | Commit message for the changed YAML file                                                                                                                                                                         | ''                                                    |
+| labels           | Comma separated list of labels, e.g. "feature, yaml-updates"                                                                                                                                                     | 'yaml-updates'                                        |
+| createPR         | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                                                                                                                         | `true`                                                |
+| title            | Custom title for the created Pull Request                                                                                                                                                                        | 'Merge: {{message}}'                                  |
+| description      | Custom description for the created Pull Request                                                                                                                                                                  | ''                                                    |
+| targetBranch     | Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true'                                                                                                                                     | `master`                                              |
+| repository       | The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{github.repository}}                                |
+| branch           | The updated YAML file will be committed to this branch, branch will be created if not exists                                                                                                                     | `master`                                              |
+| masterBranchName | Branch name of your master branch                                                                                                                                                                                | `master`                                              |
+| githubAPI        | BaseURL for all GitHub REST API requests                                                                                                                                                                         | https://api.github.com                                |
+| token            | GitHub API Token which is used to create the PR, have to have right permissions for the selected repository                                                                                                      | ${{github.token}}                                     |
 | commitUserName   | Name used for the commit user                                                                                                                                                                                    | github-actions[bot]                                   |
 | commitUserEmail  | Email address used for the commit user                                                                                                                                                                           | 41898282+github-actions[bot]@users.noreply.github.com |
 
 ### Output
 
 - `commit` Git Commit SHA
-- `pull_request` Git PR Informations
+- `pull_request` Git PR Information
 
-## Debug Informations
+## Debug Information
 
-Enable Debug mode to get informations about
+Enable Debug mode to get information about
 
 - YAML parse and update results
 - Git Steps
@@ -139,7 +139,7 @@ Enable Debug mode to get informations about
 
 In this first version the updated YAML file will not be patched. It is parsed into JSON, after the update its converted back to YAML. This means that comments and blank lines will be removed in this process and the intend of the updated content can be different to the previous.
 
-By default each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
+By default, each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
 
 ## Examples
 
