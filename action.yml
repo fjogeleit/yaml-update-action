@@ -83,11 +83,11 @@ inputs:
   commitUserName:
     description: Name used for the commit user
     required: false
-    default: GitHub Actions
+    default: 'github-actions[bot]'
   commitUserEmail:
     description: Email address used for the commit user
     required: false
-    default: actions@github.com
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
   reviewers:
     description: List of reviewers for the created Pull Request, if enabled
     required: false

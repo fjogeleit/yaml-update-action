@@ -120,8 +120,8 @@ Determine the behavior for none existing properties or array elements.
 |masterBranchName| Branch name of your master branch                                                                           | `master`               |
 |githubAPI       | BaseURL for all GitHub REST API requests                                                                    | https://api.github.com |
 |token           | GitHub API Token which is used to create the PR, have to have right permissions for the selected repository | ${{github.token}}      |
-|commitUserName  | Name used for the commit user                                                                               | GitHub Actions         |
-|commitUserEmail | Email address used for the commit user                                                                      | actions@github.com     |
+| commitUserName   | Name used for the commit user                                                                                                                                                                                    | github-actions[bot]                                   |
+| commitUserEmail  | Email address used for the commit user                                                                                                                                                                           | 41898282+github-actions[bot]@users.noreply.github.com |
 
 ### Output
 
