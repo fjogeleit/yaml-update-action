@@ -15,6 +15,10 @@ inputs:
     required: false
     description: 'Removes quotes from reserved words, like Y, N, yes, no, on, etc.'
     default: 'false'
+  quotingType:
+    required: false
+    description: QuotingType for YAML conversion, possible values are ' and ". Defaults to single quotes
+    default: "'"
   format:
     required: false
     description: 'Supported file formats, possible values are YAML and JSON, will be guessed by file extension if not provided. Falls back to YAML'
