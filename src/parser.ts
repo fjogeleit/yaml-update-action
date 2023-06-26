@@ -1,6 +1,6 @@
 import YAML from 'js-yaml'
 import fs from 'fs'
-import {Format, ContentNode, FormatParser} from './types'
+import {Format, ContentNode, FormatParser, QuotingType} from './types'
 
 export const formatGuesser = (filename: string): Format => {
   if (filename.endsWith(Format.JSON)) {
@@ -33,8 +33,8 @@ const YAMLParser = {
   convert<T extends ContentNode>(filePath: string): T {
     return validateContent<T>(YAML.load(readFile(filePath)) as T, Format.YAML)
   },
-  dump<T extends ContentNode>(content: T, options?: {noCompatMode: boolean}): string {
-    return YAML.dump(content, {lineWidth: -1, noCompatMode: options?.noCompatMode})
+  dump<T extends ContentNode>(content: T, options?: {noCompatMode: boolean; quotingType?: QuotingType}): string {
+    return YAML.dump(content, {lineWidth: -1, noCompatMode: options?.noCompatMode, quotingType: options?.quotingType})
   }
 }
 

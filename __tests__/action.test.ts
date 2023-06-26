@@ -20,6 +20,7 @@ test('test success', async () => {
   process.env['VALUE_PATH'] = 'backend.version'
   process.env['VALUE'] = 'v1.1.0'
   process.env['BRANCH'] = 'deployment/v1.1.0'
+  process.env['QUOTING_TYPE'] = '"'
 
   const [{json, content}] = await runTest<{backend: {version: string}; frontend: ContentNode}>(new EnvOptions())
 

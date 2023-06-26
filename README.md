@@ -93,6 +93,7 @@ jobs:
 | format       | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON`                                                                                                                            |                                           |
 | method       | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create`                                                                                                                                                                    | `CreateOrUpdate`                          |
 | noCompatMode | Removes quotes from reserved words, like Y, N, yes, no, on, etc.                                                                                                                                                                                                                | `false`                                   |
+| quotingType | used quotes for string values in YAML output                                                                                                                                                                                                               | `'`                                   |
 
 #### Methods
 
