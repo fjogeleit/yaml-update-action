@@ -231,7 +231,7 @@ export function processFile(file: string, values: ValueUpdates, options: Options
   const parser = formatParser[format]
 
   let contentNode = parser.convert(filePath)
-  let contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode})
+  let contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode, quotingType: options.quotingType})
 
   const initContent = contentString
 
@@ -239,7 +239,7 @@ export function processFile(file: string, values: ValueUpdates, options: Options
 
   for (const [propertyPath, value] of Object.entries(values)) {
     contentNode = replace(value, propertyPath, contentNode, options.method)
-    contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode})
+    contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode, quotingType: options.quotingType})
   }
 
   actions.debug(`Generated updated ${format.toUpperCase()}

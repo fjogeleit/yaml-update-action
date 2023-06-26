@@ -9,3 +9,4 @@ containers:
 config:
   prod: false,
   version: 0
+  boolString: 'true'
