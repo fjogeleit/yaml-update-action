@@ -11,6 +11,7 @@ export interface Options {
   commitChange: boolean
   updateFile: boolean
   branch: string
+  force: boolean
   masterBranchName: string
   message: string
   title: string
@@ -47,6 +48,10 @@ export class GitHubOptions implements Options {
 
   get branch(): string {
     return core.getInput('branch')
+  }
+
+  get force(): boolean {
+    return core.getInput('force')
   }
 
   get commitChange(): boolean {
