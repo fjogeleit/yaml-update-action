@@ -36,7 +36,7 @@ export async function run(options: Options, actions: Actions): Promise<void> {
 
     const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
 
-    await gitProcessing(options.repository, options.branch, options.masterBranchName, files, options.message, octokit, actions, options.committer)
+    await gitProcessing(options.repository, options.branch, options.force, options.masterBranchName, files, options.message, octokit, actions, options.committer)
 
     if (options.createPR) {
       await createPullRequest(
@@ -116,6 +116,7 @@ export function writeTo(content: string, filePath: string, actions: Actions): vo
 export async function gitProcessing(
   repository: string,
   branch: string,
+  force: boolean,
   masterBranchName: string,
   files: ChangedFile[],
   commitMessage: string,
@@ -145,7 +146,7 @@ export async function gitProcessing(
   actions.debug(JSON.stringify({createdCommit: newCommitSha}))
   actions.setOutput('commit', newCommitSha)
 
-  await updateBranch(octokit, owner, repo, branch, newCommitSha, actions)
+  await updateBranch(octokit, owner, repo, branch, force, newCommitSha, actions)
 
   actions.debug(`Complete`)
 }
