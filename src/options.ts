@@ -51,7 +51,7 @@ export class GitHubOptions implements Options {
   }
 
   get force(): boolean {
-    return core.getInput('force')
+    return core.getBooleanInput('force')
   }
 
   get commitChange(): boolean {
