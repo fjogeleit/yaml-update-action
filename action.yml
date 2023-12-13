@@ -32,6 +32,10 @@ inputs:
     required: false
     description: 'Branch to commit the change, will be created if not exist'
     default: 'master'
+  force:
+    required: false
+    description: 'Branch to commit the change, will be created if not exist'
+    default: 'false'
   masterBranchName:
     required: false
     description: 'Branch name of your master'

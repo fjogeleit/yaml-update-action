@@ -132,7 +132,7 @@ export const updateBranch = async (
       repo,
       ref: `heads/${branch}`,
       sha: commitSha,
-      force: force || false
+      force: force
     })
   } catch (error) {
     actions.info(`update branch ${branch} failed (${error}), fallback to create branch`)
