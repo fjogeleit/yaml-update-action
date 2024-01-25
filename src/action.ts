@@ -54,8 +54,14 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       )
     }
   } catch (error) {
-    actions.setFailed((error as Error).toString())
-    return
+    const msg = (error as Error).toString()
+    
+    if (msg.includes('pull request already exists')) {
+      actions.info("Pull Request already exists")
+      return
+    }
+
+    actions.setFailed(`failed to create PR: ${msg}`)
   }
 }
 

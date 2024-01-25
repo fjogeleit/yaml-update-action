@@ -49,7 +49,6 @@ jobs:
           message: 'Update Image Version to v1.2.0'
           token: ${{ secrets.GH_TOKEN }}
 
-
   test-target-repository:
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +83,6 @@ jobs:
           value: v1.0.1
           masterBranchName: main
           commitChange: 'false'
-          updateFile: 'true'
       - name: Cat Updated values.yaml
         run: cat __tests__/fixtures/values.yaml
   
