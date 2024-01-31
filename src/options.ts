@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
-import {convertValue, parseChanges} from './helper'
-import {Committer, Changes, Method, Format, QuotingType} from './types'
+import { convertValue, parseChanges } from './helper'
+import { Committer, Changes, Method, Format, QuotingType } from './types'
 
 export interface Options {
   valueFile: string
@@ -85,7 +85,9 @@ export class GitHubOptions implements Options {
   get quotingType(): QuotingType | undefined {
     const quotingType = core.getInput('quotingType')
 
-    return ['"', "'"].includes(quotingType) ? (quotingType as QuotingType) : undefined
+    return ['"', "'"].includes(quotingType)
+      ? (quotingType as QuotingType)
+      : undefined
   }
 
   get token(): string {
@@ -186,7 +188,9 @@ export class GitHubOptions implements Options {
   get method(): Method {
     const method = (core.getInput('method') || '').toLowerCase() as Method
 
-    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+    if (
+      [Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)
+    ) {
       return method
     }
 
@@ -256,7 +260,9 @@ export class EnvOptions implements Options {
   get quotingType(): QuotingType | undefined {
     const quotingType = process.env.QUOTING_TYPE || ''
 
-    return ['"', "'"].includes(quotingType) ? (quotingType as QuotingType) : undefined
+    return ['"', "'"].includes(quotingType)
+      ? (quotingType as QuotingType)
+      : undefined
   }
 
   get message(): string {
@@ -340,7 +346,9 @@ export class EnvOptions implements Options {
   get method(): Method {
     const method = (process.env.METHOD || '').toLowerCase() as Method
 
-    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+    if (
+      [Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)
+    ) {
       return process.env.METHOD as Method
     }
 
