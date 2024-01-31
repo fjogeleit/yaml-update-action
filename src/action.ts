@@ -2,18 +2,34 @@ import YAML from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import jp from 'jsonpath'
-import {Options} from './options'
-import {formatGuesser, formatParser} from './parser'
-import {Octokit} from '@octokit/rest'
-import {Actions, EmptyActions} from './github-actions'
-import {createBlobForFile, createNewCommit, createNewTree, currentCommit, repositoryInformation, updateBranch} from './git-commands'
-import {ChangedFile, Committer, Format, Method, ValueUpdates, ContentNode} from './types'
+import { Options } from './options'
+import { formatGuesser, formatParser } from './parser'
+import { Octokit } from '@octokit/rest'
+import { Actions, EmptyActions } from './github-actions'
+import {
+  createBlobForFile,
+  createNewCommit,
+  createNewTree,
+  currentCommit,
+  repositoryInformation,
+  updateBranch
+} from './git-commands'
+import {
+  ChangedFile,
+  Committer,
+  Format,
+  Method,
+  ValueUpdates,
+  ContentNode
+} from './types'
 
 const APPEND_ARRAY_EXPRESSION = '[(@.length)]'
 
 export async function run(options: Options, actions: Actions): Promise<void> {
   if (options.updateFile === true) {
-    actions.info('updateFile is deprected, the updated content will be written to the file by default from now on')
+    actions.info(
+      'updateFile is deprected, the updated content will be written to the file by default from now on'
+    )
   }
 
   try {
@@ -34,9 +50,22 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       return
     }
 
-    const octokit = new Octokit({auth: options.token, baseUrl: options.githubAPI})
+    const octokit = new Octokit({
+      auth: options.token,
+      baseUrl: options.githubAPI
+    })
 
-    await gitProcessing(options.repository, options.branch, options.force, options.masterBranchName, files, options.message, octokit, actions, options.committer)
+    await gitProcessing(
+      options.repository,
+      options.branch,
+      options.force,
+      options.masterBranchName,
+      files,
+      options.message,
+      octokit,
+      actions,
+      options.committer
+    )
 
     if (options.createPR) {
       await createPullRequest(
@@ -55,9 +84,8 @@ export async function run(options: Options, actions: Actions): Promise<void> {
     }
   } catch (error) {
     const msg = (error as Error).toString()
-    
     if (msg.includes('pull request already exists')) {
-      actions.info("Pull Request already exists")
+      actions.info('Pull Request already exists')
       return
     }
 
@@ -65,7 +93,9 @@ export async function run(options: Options, actions: Actions): Promise<void> {
   }
 }
 
-export async function runTest<T extends ContentNode>(options: Options): Promise<(ChangedFile & {json: T})[]> {
+export async function runTest<T extends ContentNode>(
+  options: Options
+): Promise<(ChangedFile & { json: T })[]> {
   const files: ChangedFile[] = []
 
   for (const [file, values] of Object.entries(options.changes)) {
@@ -75,7 +105,7 @@ export async function runTest<T extends ContentNode>(options: Options): Promise<
     }
   }
 
-  return files as (ChangedFile & {json: T})[]
+  return files as (ChangedFile & { json: T })[]
 }
 
 export function replace<T extends ContentNode>(
@@ -98,7 +128,10 @@ export function replace<T extends ContentNode>(
     return content as T
   }
 
-  if ([Method.CreateOrUpdate, Method.Create].includes(method) && isAppendArrayNode(content, jsonPath)) {
+  if (
+    [Method.CreateOrUpdate, Method.Create].includes(method) &&
+    isAppendArrayNode(content, jsonPath)
+  ) {
     jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '')
     const parent: unknown[] = jp.value(copy, jsonPath)
 
@@ -111,7 +144,11 @@ export function replace<T extends ContentNode>(
   return copy
 }
 
-export function writeTo(content: string, filePath: string, actions: Actions): void {
+export function writeTo(
+  content: string,
+  filePath: string,
+  actions: Actions
+): void {
   fs.writeFile(filePath, content, err => {
     if (!err) return
 
@@ -130,11 +167,17 @@ export async function gitProcessing(
   actions: Actions,
   committer: Committer
 ): Promise<void> {
-  const {owner, repo} = repositoryInformation(repository)
-  const {commitSha, treeSha} = await currentCommit(octokit, owner, repo, branch, masterBranchName)
+  const { owner, repo } = repositoryInformation(repository)
+  const { commitSha, treeSha } = await currentCommit(
+    octokit,
+    owner,
+    repo,
+    branch,
+    masterBranchName
+  )
 
-  actions.debug(JSON.stringify({baseCommit: commitSha, baseTree: treeSha}))
-  const debugFiles: {[file: string]: string} = {}
+  actions.debug(JSON.stringify({ baseCommit: commitSha, baseTree: treeSha }))
+  const debugFiles: { [file: string]: string } = {}
 
   for (const file of files) {
     file.sha = await createBlobForFile(octokit, owner, repo, file)
@@ -145,11 +188,19 @@ export async function gitProcessing(
 
   const newTreeSha = await createNewTree(octokit, owner, repo, files, treeSha)
 
-  actions.debug(JSON.stringify({createdTree: newTreeSha}))
+  actions.debug(JSON.stringify({ createdTree: newTreeSha }))
 
-  const newCommitSha = await createNewCommit(octokit, owner, repo, commitMessage, newTreeSha, commitSha, committer)
+  const newCommitSha = await createNewCommit(
+    octokit,
+    owner,
+    repo,
+    commitMessage,
+    newTreeSha,
+    commitSha,
+    committer
+  )
 
-  actions.debug(JSON.stringify({createdCommit: newCommitSha}))
+  actions.debug(JSON.stringify({ createdCommit: newCommitSha }))
   actions.setOutput('commit', newCommitSha)
 
   await updateBranch(octokit, owner, repo, branch, force, newCommitSha, actions)
@@ -170,7 +221,7 @@ export async function createPullRequest(
   octokit: Octokit,
   actions: Actions
 ): Promise<void> {
-  const {owner, repo} = repositoryInformation(repository)
+  const { owner, repo } = repositoryInformation(repository)
 
   const response = await octokit.pulls.create({
     owner,
@@ -212,7 +263,9 @@ export async function createPullRequest(
       team_reviewers: teamReviewers
     })
 
-    actions.debug(`Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`)
+    actions.debug(
+      `Add Reviewers: ${[...reviewers, ...teamReviewers].join(', ')}`
+    )
   }
 
   actions.debug(`Add Label: ${labels.join(', ')}`)
@@ -228,17 +281,29 @@ export const convertValue = (value: string): string | number | boolean => {
   return result[0]
 }
 
-export function processFile(file: string, values: ValueUpdates, options: Options, actions: Actions): ChangedFile | null {
+export function processFile(
+  file: string,
+  values: ValueUpdates,
+  options: Options,
+  actions: Actions
+): ChangedFile | null {
   const filePath = path.join(process.cwd(), options.workDir, file)
 
-  actions.debug(`FilePath: ${filePath}, Parameter: ${JSON.stringify({cwd: process.cwd(), workDir: options.workDir, valueFile: file})}`)
+  actions.debug(
+    `FilePath: ${filePath}, Parameter: ${JSON.stringify({ cwd: process.cwd(), workDir: options.workDir, valueFile: file })}`
+  )
 
-  const format = determineFinalFormat(filePath, options.format, actions) as Format.JSON | Format.YAML
+  const format = determineFinalFormat(filePath, options.format, actions) as
+    | Format.JSON
+    | Format.YAML
 
   const parser = formatParser[format]
 
   let contentNode = parser.convert(filePath)
-  let contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode, quotingType: options.quotingType})
+  let contentString = parser.dump(contentNode, {
+    noCompatMode: options.noCompatMode,
+    quotingType: options.quotingType
+  })
 
   const initContent = contentString
 
@@ -246,7 +311,10 @@ export function processFile(file: string, values: ValueUpdates, options: Options
 
   for (const [propertyPath, value] of Object.entries(values)) {
     contentNode = replace(value, propertyPath, contentNode, options.method)
-    contentString = parser.dump(contentNode, {noCompatMode: options.noCompatMode, quotingType: options.quotingType})
+    contentString = parser.dump(contentNode, {
+      noCompatMode: options.noCompatMode,
+      quotingType: options.quotingType
+    })
   }
 
   actions.debug(`Generated updated ${format.toUpperCase()}
@@ -269,7 +337,9 @@ export function processFile(file: string, values: ValueUpdates, options: Options
 }
 
 const pathNotExists = (content: ContentNode, jsonPath: string): boolean => {
-  return jp.paths(content, jsonPath) && jp.value(content, jsonPath) === undefined
+  return (
+    jp.paths(content, jsonPath) && jp.value(content, jsonPath) === undefined
+  )
 }
 
 const isAppendArrayNode = (content: ContentNode, jsonPath: string): boolean => {
@@ -283,12 +353,19 @@ const isAppendArrayNode = (content: ContentNode, jsonPath: string): boolean => {
 
   jsonPath = jsonPath.replace(APPEND_ARRAY_EXPRESSION, '')
 
-  const parent = jp.value(content, jsonPath.replace(APPEND_ARRAY_EXPRESSION, ''))
+  const parent = jp.value(
+    content,
+    jsonPath.replace(APPEND_ARRAY_EXPRESSION, '')
+  )
 
   return Array.isArray(parent)
 }
 
-const determineFinalFormat = (filePath: string, format: Format, action: Actions): Format => {
+const determineFinalFormat = (
+  filePath: string,
+  format: Format,
+  action: Actions
+): Format => {
   // try to guess format from file extension, if not provided
   if (format !== Format.UNKNOWN) {
     action.debug(`use ${format.toUpperCase()} format from configuration`)
@@ -297,7 +374,9 @@ const determineFinalFormat = (filePath: string, format: Format, action: Actions)
 
   format = formatGuesser(filePath)
   if (format !== Format.UNKNOWN) {
-    action.debug(`use ${format.toUpperCase()} format, guessed from extension: ${filePath}`)
+    action.debug(
+      `use ${format.toUpperCase()} format, guessed from extension: ${filePath}`
+    )
     return format
   }
 
