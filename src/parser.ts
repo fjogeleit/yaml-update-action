@@ -1,6 +1,6 @@
 import YAML from 'js-yaml'
 import fs from 'fs'
-import {Format, ContentNode, FormatParser, QuotingType} from './types'
+import { Format, ContentNode, FormatParser, QuotingType } from './types'
 
 export const formatGuesser = (filename: string): Format => {
   if (filename.endsWith(Format.JSON)) {
@@ -33,15 +33,25 @@ const YAMLParser = {
   convert<T extends ContentNode>(filePath: string): T {
     return validateContent<T>(YAML.load(readFile(filePath)) as T, Format.YAML)
   },
-  dump<T extends ContentNode>(content: T, options?: {noCompatMode: boolean; quotingType?: QuotingType}): string {
-    return YAML.dump(content, {lineWidth: -1, noCompatMode: options?.noCompatMode, quotingType: options?.quotingType})
+  dump<T extends ContentNode>(
+    content: T,
+    options?: { noCompatMode: boolean; quotingType?: QuotingType }
+  ): string {
+    return YAML.dump(content, {
+      lineWidth: -1,
+      noCompatMode: options?.noCompatMode,
+      quotingType: options?.quotingType
+    })
   }
 }
 
 const JSONParser = {
   convert<T extends ContentNode>(filePath: string): T {
     try {
-      return validateContent<T>(JSON.parse(readFile(filePath)) as T, Format.JSON)
+      return validateContent<T>(
+        JSON.parse(readFile(filePath)) as T,
+        Format.JSON
+      )
     } catch {
       return validateContent<T>(undefined, Format.JSON)
     }
@@ -51,7 +61,9 @@ const JSONParser = {
   }
 }
 
-export const formatParser: {[key in Exclude<Format, Format.UNKNOWN>]: FormatParser} = {
+export const formatParser: {
+  [key in Exclude<Format, Format.UNKNOWN>]: FormatParser
+} = {
   [Format.JSON]: JSONParser,
   [Format.YAML]: YAMLParser
 }

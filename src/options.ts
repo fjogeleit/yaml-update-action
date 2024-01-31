@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
-import {convertValue, parseChanges} from './helper'
-import {Committer, Changes, Method, Format, QuotingType} from './types'
+import { convertValue, parseChanges } from './helper'
+import { Committer, Changes, Method, Format, QuotingType } from './types'
 
 export interface Options {
   valueFile: string
@@ -11,6 +11,7 @@ export interface Options {
   commitChange: boolean
   updateFile: boolean
   branch: string
+  force: boolean
   masterBranchName: string
   message: string
   title: string
@@ -49,6 +50,10 @@ export class GitHubOptions implements Options {
     return core.getInput('branch')
   }
 
+  get force(): boolean {
+    return core.getBooleanInput('force')
+  }
+
   get commitChange(): boolean {
     return core.getBooleanInput('commitChange')
   }
@@ -80,7 +85,9 @@ export class GitHubOptions implements Options {
   get quotingType(): QuotingType | undefined {
     const quotingType = core.getInput('quotingType')
 
-    return ['"', "'"].includes(quotingType) ? (quotingType as QuotingType) : undefined
+    return ['"', "'"].includes(quotingType)
+      ? (quotingType as QuotingType)
+      : undefined
   }
 
   get token(): string {
@@ -181,7 +188,9 @@ export class GitHubOptions implements Options {
   get method(): Method {
     const method = (core.getInput('method') || '').toLowerCase() as Method
 
-    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+    if (
+      [Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)
+    ) {
       return method
     }
 
@@ -220,6 +229,10 @@ export class EnvOptions implements Options {
     return process.env.MASTER_BRANCH_NAME || ''
   }
 
+  get force(): boolean {
+    return process.env.FORCE === 'true'
+  }
+
   get commitChange(): boolean {
     return process.env.COMMIT_CHANGE === 'true'
   }
@@ -247,7 +260,9 @@ export class EnvOptions implements Options {
   get quotingType(): QuotingType | undefined {
     const quotingType = process.env.QUOTING_TYPE || ''
 
-    return ['"', "'"].includes(quotingType) ? (quotingType as QuotingType) : undefined
+    return ['"', "'"].includes(quotingType)
+      ? (quotingType as QuotingType)
+      : undefined
   }
 
   get message(): string {
@@ -331,7 +346,9 @@ export class EnvOptions implements Options {
   get method(): Method {
     const method = (process.env.METHOD || '').toLowerCase() as Method
 
-    if ([Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)) {
+    if (
+      [Method.CreateOrUpdate, Method.Create, Method.Update].includes(method)
+    ) {
       return process.env.METHOD as Method
     }
 
