@@ -28,7 +28,7 @@ jobs:
           masterBranchName: main
           value: v1.0.1
           branch: deployment/v1.0.1
-          targetBranch: main
+          targetBranch: existing-pr
           createPR: 'true'
           message: 'Update Image Version to v1.0.1'
           token: ${{ secrets.GH_TOKEN }}
