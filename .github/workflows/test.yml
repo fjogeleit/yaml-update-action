@@ -29,7 +29,7 @@ jobs:
           value: v1.0.1
           branch: deployment/v1.0.1
           targetBranch: main
-          createPR: 'false'
+          createPR: 'true'
           message: 'Update Image Version to v1.0.1'
           token: ${{ secrets.GH_TOKEN }}
 
@@ -160,4 +160,4 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
-          branches: deployment/v1.2.1,deployment/v1.0.1,deployment/test-bool-value,deployment/test-int-value,deployment/test-multi-file-update
+          branches: deployment/v1.2.1,deployment/test-bool-value,deployment/test-int-value,deployment/test-multi-file-update
