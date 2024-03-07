@@ -180,6 +180,29 @@ test('multiple changes in one file', async () => {
   console.info(content)
 })
 
+test('change in multi file', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/multivalue.yaml'
+  process.env['WORK_DIR'] = '__tests__'
+  process.env['VALUE_PATH'] = '$[0].backend.version'
+  process.env['VALUE'] = 'v1.1.0'
+  process.env['BRANCH'] = 'deployment/v1.1.0'
+  process.env['QUOTING_TYPE'] = '"'
+
+  type Result = {
+    backend: { version: string }
+    frontend: ContentNode
+  };
+
+  const [{ json, content }] = await runTest<Result>(new EnvOptions())
+
+  const jsonArray = json as unknown as Result[];
+
+  expect(jsonArray[0].backend.version).toEqual(process.env['VALUE'])
+  expect(jsonArray[1].backend.version).not.toEqual(process.env['VALUE'])
+  console.info(content)
+  console.info(json)
+})
+
 test('multiple changes in multiple files', async () => {
   process.env['CHANGES'] = `{
     "fixtures/values.yaml": {"backend.version": "v1.1.0", "containers[1].image": "node:alpine"},
