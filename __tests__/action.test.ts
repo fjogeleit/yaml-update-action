@@ -191,11 +191,11 @@ test('change in multi file', async () => {
   type Result = {
     backend: { version: string }
     frontend: ContentNode
-  };
+  }
 
   const [{ json, content }] = await runTest<Result>(new EnvOptions())
 
-  const jsonArray = json as unknown as Result[];
+  const jsonArray = json as unknown as Result[]
 
   expect(jsonArray[0].backend.version).toEqual(process.env['VALUE'])
   expect(jsonArray[1].backend.version).not.toEqual(process.env['VALUE'])

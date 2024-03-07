@@ -31,14 +31,14 @@ const validateContent = <T>(content: T | undefined, format: Format): T => {
 
 const YAMLParser = {
   convert<T extends ContentNode>(filePath: string): T {
-    const content = YAML.loadAll(readFile(filePath)) as ContentNode[];
+    const content = YAML.loadAll(readFile(filePath)) as ContentNode[]
     if (content.length <= 1) {
-      return validateContent<T>(content[0] as T, Format.YAML);
+      return validateContent<T>(content[0] as T, Format.YAML)
     }
     for (const entry of content) {
-      validateContent(entry, Format.YAML);
+      validateContent(entry, Format.YAML)
     }
-    return content as unknown as T;
+    return content as unknown as T
   },
   dump<T extends ContentNode>(
     content: T,
