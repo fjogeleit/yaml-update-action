@@ -48360,25 +48360,38 @@ const validateContent = (content, format) => {
     }
     return content;
 };
-const YAMLParser = {
+class YAMLMultiFileParser {
+    isMultifile = false;
     convert(filePath) {
         const content = js_yaml_1.default.loadAll(readFile(filePath));
         if (content.length <= 1) {
+            this.isMultifile = false;
             return validateContent(content[0], types_1.Format.YAML);
         }
+        this.isMultifile = true;
         for (const entry of content) {
             validateContent(entry, types_1.Format.YAML);
         }
         return content;
-    },
+    }
     dump(content, options) {
+        if (this.isMultifile) {
+            const entries = content;
+            const fileContents = entries.map((v) => this.internal_dump(v, options));
+            return fileContents.join('\n\n---\n\n');
+        }
+        else {
+            return this.internal_dump(content, options);
+        }
+    }
+    internal_dump(content, options) {
         return js_yaml_1.default.dump(content, {
             lineWidth: -1,
             noCompatMode: options?.noCompatMode,
             quotingType: options?.quotingType
         });
     }
-};
+}
 const JSONParser = {
     convert(filePath) {
         try {
@@ -48394,7 +48407,7 @@ const JSONParser = {
 };
 exports.formatParser = {
     [types_1.Format.JSON]: JSONParser,
-    [types_1.Format.YAML]: YAMLParser
+    [types_1.Format.YAML]: new YAMLMultiFileParser(),
 };
 
 
