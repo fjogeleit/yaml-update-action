@@ -48377,7 +48377,7 @@ class YAMLMultiFileParser {
     dump(content, options) {
         if (this.isMultifile) {
             const entries = content;
-            const fileContents = entries.map((v) => this.internal_dump(v, options));
+            const fileContents = entries.map(v => this.internal_dump(v, options));
             return fileContents.join('\n\n---\n\n');
         }
         else {
@@ -48407,7 +48407,7 @@ const JSONParser = {
 };
 exports.formatParser = {
     [types_1.Format.JSON]: JSONParser,
-    [types_1.Format.YAML]: new YAMLMultiFileParser(),
+    [types_1.Format.YAML]: new YAMLMultiFileParser()
 };
 
 
