@@ -201,7 +201,36 @@ jobs:
             }
 ```
 
-### Advaned Example with an separate target repository
+### Change a YAML Multifile
+
+Yaml supports multiple documents in a single file separated by `---`.
+To update such a file, start the property path with the index of the document to be changed.
+
+```yaml
+jobs:
+  test-multifile-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'deployment/helm/values.yaml'
+          branch: deployment/v1.0.1
+          targetBranch: main
+          createPR: 'true'
+          description: Test GitHub Action
+          message: 'Update Images'
+          title: 'Version Updates '
+          changes: |
+            {
+              "__tests__/fixtures/multivalue.yaml": {
+                "[0].backend.version": "v1.1.0",
+                "[1].containers[1].image": "node:alpine"
+              }
+            }
+```
+
+### Advanced Example with an separate target repository
 
 ```yaml
 env:
