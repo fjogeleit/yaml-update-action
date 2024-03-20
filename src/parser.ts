@@ -30,7 +30,7 @@ const validateContent = <T>(content: T | undefined, format: Format): T => {
 }
 
 class YAMLMultiFileParser {
-  private isMultifile: boolean = false
+  private isMultifile = false
 
   convert<T extends ContentNode>(filePath: string): T {
     const content = YAML.loadAll(readFile(filePath)) as ContentNode[]
