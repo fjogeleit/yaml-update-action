@@ -275,7 +275,6 @@ test('multiple changes in multiple files, including multifiles', async () => {
   expect(results[2].json.backend.version).toEqual('v1.3.0')
   expect(results[2].json.frontend).toEqual(true)
   console.info(results[2].content)
-
 })
 test('append array node', async () => {
   process.env['CHANGES'] = `{

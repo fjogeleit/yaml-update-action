@@ -30,15 +30,15 @@ const validateContent = <T>(content: T | undefined, format: Format): T => {
 }
 
 class YAMLMultiFileParser {
-  private isMultifile: boolean = false;
+  private isMultifile: boolean = false
 
   convert<T extends ContentNode>(filePath: string): T {
     const content = YAML.loadAll(readFile(filePath)) as ContentNode[]
     if (content.length <= 1) {
-      this.isMultifile = false;
+      this.isMultifile = false
       return validateContent<T>(content[0] as T, Format.YAML)
     }
-    this.isMultifile = true;
+    this.isMultifile = true
     for (const entry of content) {
       validateContent(entry, Format.YAML)
     }
@@ -48,14 +48,13 @@ class YAMLMultiFileParser {
   dump<T extends ContentNode>(
     content: T,
     options?: {
-      noCompatMode: boolean; quotingType?: QuotingType
+      noCompatMode: boolean
+      quotingType?: QuotingType
     }
   ): string {
     if (this.isMultifile) {
-      const entries = content as unknown as T[];
-      const fileContents = entries.map((v) =>
-        this.internal_dump(v, options)
-      );
+      const entries = content as unknown as T[]
+      const fileContents = entries.map(v => this.internal_dump(v, options))
       return fileContents.join('\n\n---\n\n')
     } else {
       return this.internal_dump(content, options)
@@ -65,7 +64,8 @@ class YAMLMultiFileParser {
   private internal_dump<T extends ContentNode>(
     content: T,
     options?: {
-      noCompatMode: boolean; quotingType?: QuotingType
+      noCompatMode: boolean
+      quotingType?: QuotingType
     }
   ): string {
     return YAML.dump(content, {
@@ -96,5 +96,5 @@ export const formatParser: {
   [key in Exclude<Format, Format.UNKNOWN>]: FormatParser
 } = {
   [Format.JSON]: JSONParser,
-  [Format.YAML]: new YAMLMultiFileParser(),
+  [Format.YAML]: new YAMLMultiFileParser()
 }
