@@ -117,7 +117,12 @@ export function replace<T extends ContentNode>(
   const copy = JSON.parse(JSON.stringify(content))
 
   if (!jsonPath.startsWith('$')) {
-    jsonPath = `$.${jsonPath}`
+    if (jsonPath.startsWith('[')) {
+      // support top level arrays, e.g. `$[0].property`
+      jsonPath = `$${jsonPath}`
+    } else {
+      jsonPath = `$.${jsonPath}`
+    }
   }
 
   if (method === Method.Update && pathNotExists(copy, jsonPath)) {

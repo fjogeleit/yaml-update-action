@@ -180,6 +180,50 @@ test('multiple changes in one file', async () => {
   console.info(content)
 })
 
+test('change in multi file', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/multivalue.yaml'
+  process.env['WORK_DIR'] = '__tests__'
+  process.env['VALUE_PATH'] = '[0].backend.version'
+  process.env['VALUE'] = 'v1.1.0'
+  process.env['BRANCH'] = 'deployment/v1.1.0'
+  process.env['QUOTING_TYPE'] = '"'
+
+  type Result = {
+    backend: { version: string }
+    frontend: ContentNode
+  }
+
+  const [{ json, content }] = await runTest<Result>(new EnvOptions())
+
+  const jsonArray = json as unknown as Result[]
+
+  expect(jsonArray[0].backend.version).toEqual(process.env['VALUE'])
+  expect(jsonArray[1].backend.version).not.toEqual(process.env['VALUE'])
+  console.info(content)
+  console.info(json)
+})
+
+test('multiple changes in a multifile', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/multivalue.yaml'
+  process.env['CHANGES'] =
+    '{"[0].backend.version": "v1.1.0", "[1].containers[1].image": "node:alpine"}'
+
+  type Result = {
+    backend: { version: string }
+    containers: { name: string; image: string }[]
+  }
+
+  const [{ json, content }] = await runTest<Result>(new EnvOptions())
+
+  const jsonArray = json as unknown as Result[]
+
+  expect(jsonArray[0].backend.version).toEqual('v1.1.0')
+  expect(jsonArray[1].backend.version).toEqual('v1.2.0')
+  expect(jsonArray[0].containers[1].image).toEqual('node:latest')
+  expect(jsonArray[1].containers[1].image).toEqual('node:alpine')
+  console.info(content)
+})
+
 test('multiple changes in multiple files', async () => {
   process.env['CHANGES'] = `{
     "fixtures/values.yaml": {"backend.version": "v1.1.0", "containers[1].image": "node:alpine"},
@@ -201,6 +245,37 @@ test('multiple changes in multiple files', async () => {
   console.info(results[1].content)
 })
 
+test('multiple changes in multiple files, including multifiles', async () => {
+  process.env['CHANGES'] = `{
+    "fixtures/values.yaml": {"backend.version": "v1.1.0", "containers[1].image": "node:alpine"},
+    "fixtures/multivalue.yaml": {"[0].backend.version": "v1.1.0", "[1].containers[1].image": "node:alpine"},
+    "fixtures/values.prod.yaml": {"backend.version": "v1.3.0", "frontend": true}
+  }`
+
+  type Result = {
+    backend: { version: string }
+    fronted: boolean
+    containers: { name: string; image: string }[]
+  }
+
+  const results = await runTest<Result>(new EnvOptions())
+
+  expect(results[0].json.backend.version).toEqual('v1.1.0')
+  expect(results[0].json.containers[1].image).toEqual('node:alpine')
+  console.info(results[0].content)
+
+  const jsonArray = results[1].json as unknown as Result[]
+
+  expect(jsonArray[0].backend.version).toEqual('v1.1.0')
+  expect(jsonArray[1].backend.version).toEqual('v1.2.0')
+  expect(jsonArray[0].containers[1].image).toEqual('node:latest')
+  expect(jsonArray[1].containers[1].image).toEqual('node:alpine')
+  console.info(results[1].content)
+
+  expect(results[2].json.backend.version).toEqual('v1.3.0')
+  expect(results[2].json.frontend).toEqual(true)
+  console.info(results[2].content)
+})
 test('append array node', async () => {
   process.env['CHANGES'] = `{
     "fixtures/values.yaml": {
