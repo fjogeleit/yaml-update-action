@@ -361,3 +361,18 @@ test('multiple changes in multiple files with different format', async () => {
   expect(results[1].json.frontend).toEqual(true)
   console.info(results[1].content)
 })
+
+test('multiple changes on the same root object', async () => {
+  process.env['VALUE_FILE'] = 'fixtures/values.yaml'
+  process.env['CHANGES'] =
+    '{"backend.version": "v1.1.0", "backend.test": "true"}'
+
+  const [{ json, content }] = await runTest<{
+    backend: { version: string; test: string }
+    containers: { name: string; image: string }[]
+  }>(new EnvOptions())
+
+  expect(json.backend.version).toEqual('v1.1.0')
+  expect(json.backend.test).toEqual('true')
+  console.info(content)
+})

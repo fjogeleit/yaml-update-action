@@ -1,6 +1,6 @@
 {
   "name": "yaml-update-action",
-  "version": "0.13.2",
+  "version": "0.16.0",
   "private": true,
   "description": "Update YAML property with dynamic values",
   "homepage": "https://github.com/actions/typescript-action",

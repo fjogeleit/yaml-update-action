@@ -77,7 +77,7 @@ jobs:
           commitChange: 'false'
       - name: Cat Updated values.yaml
         run: cat __tests__/fixtures/values.yaml
-  
+
   test-multiple-file-changes:
     runs-on: ubuntu-latest
     steps:

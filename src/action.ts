@@ -1,4 +1,4 @@
-import YAML from 'js-yaml'
+import { load } from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import jp from 'jsonpath'
@@ -281,7 +281,7 @@ export const convertValue = (value: string): string | number | boolean => {
     return value
   }
 
-  const result = YAML.load(`- ${value}`) as [string | number | boolean]
+  const result = load(`- ${value}`) as [string | number | boolean]
 
   return result[0]
 }
