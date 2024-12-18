@@ -46,10 +46,6 @@ export class GitHubOptions implements Options {
     return core.getInput('value')
   }
 
-  get branch(): string {
-    return core.getInput('branch')
-  }
-
   get force(): boolean {
     return core.getBooleanInput('force')
   }
@@ -62,8 +58,16 @@ export class GitHubOptions implements Options {
     return core.getBooleanInput('updateFile')
   }
 
+  get masterBranchName(): string {
+    return core.getInput('masterBranchName')
+  }
+
+  get branch(): string {
+    return core.getInput('branch') || core.getInput('masterBranchName')
+  }
+
   get targetBranch(): string {
-    return core.getInput('targetBranch')
+    return core.getInput('targetBranch') || core.getInput('masterBranchName')
   }
 
   get repository(): string {
@@ -148,10 +152,6 @@ export class GitHubOptions implements Options {
 
   get workDir(): string {
     return core.getInput('workDir')
-  }
-
-  get masterBranchName(): string {
-    return core.getInput('masterBranchName')
   }
 
   get committer(): Committer {

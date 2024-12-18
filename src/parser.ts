@@ -1,4 +1,4 @@
-import YAML from 'js-yaml'
+import { loadAll, dump } from 'js-yaml'
 import fs from 'fs'
 import { Format, ContentNode, FormatParser, QuotingType } from './types'
 
@@ -33,7 +33,7 @@ class YAMLMultiFileParser {
   private isMultifile = false
 
   convert<T extends ContentNode>(filePath: string): T {
-    const content = YAML.loadAll(readFile(filePath)) as ContentNode[]
+    const content = loadAll(readFile(filePath)) as ContentNode[]
     if (content.length <= 1) {
       this.isMultifile = false
       return validateContent<T>(content[0] as T, Format.YAML)
@@ -68,7 +68,7 @@ class YAMLMultiFileParser {
       quotingType?: QuotingType
     }
   ): string {
-    return YAML.dump(content, {
+    return dump(content, {
       lineWidth: -1,
       noCompatMode: options?.noCompatMode,
       quotingType: options?.quotingType
