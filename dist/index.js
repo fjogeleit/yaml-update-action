@@ -48464,6 +48464,10 @@ async function run(options, actions) {
     if (options.updateFile === true) {
         actions.info('updateFile is deprected, the updated content will be written to the file by default from now on');
     }
+    const octokit = new rest_1.Octokit({
+        auth: options.token,
+        baseUrl: options.githubAPI
+    });
     try {
         const files = [];
         for (const [file, values] of Object.entries(options.changes)) {
@@ -48477,14 +48481,18 @@ async function run(options, actions) {
         if (options.commitChange === false || files.length === 0) {
             return;
         }
-        const octokit = new rest_1.Octokit({
-            auth: options.token,
-            baseUrl: options.githubAPI
-        });
         await gitProcessing(options.repository, options.branch, options.force, options.masterBranchName, files, options.message, octokit, actions, options.committer);
-        if (options.createPR) {
-            await createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, options.reviewers, options.teamReviewers, options.assignees, octokit, actions);
-        }
+    }
+    catch (error) {
+        const msg = error.toString();
+        actions.setFailed(`failed to perform commit: ${msg}`);
+        return;
+    }
+    if (!options.createPR) {
+        return;
+    }
+    try {
+        await createPullRequest(options.repository, options.branch, options.targetBranch, options.labels, options.title || `Merge: ${options.message}`, options.description, options.reviewers, options.teamReviewers, options.assignees, octokit, actions);
     }
     catch (error) {
         const msg = error.toString();

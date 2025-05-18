@@ -162,7 +162,7 @@ export function writeTo(
   filePath: string,
   actions: Actions
 ): void {
-  fs.writeFile(filePath, content, (err) => {
+  fs.writeFile(filePath, content, err => {
     if (!err) return
 
     actions.warning(err.message)
