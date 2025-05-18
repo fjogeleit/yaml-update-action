@@ -2,10 +2,10 @@ import { load } from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import jp from 'jsonpath'
-import { Options } from './options'
-import { formatGuesser, formatParser } from './parser'
+import { Options } from './options.js'
+import { formatGuesser, formatParser } from './parser.js'
 import { Octokit } from '@octokit/rest'
-import { Actions, EmptyActions } from './github-actions'
+import { Actions, EmptyActions } from './github-actions.js'
 import {
   createBlobForFile,
   createNewCommit,
@@ -13,7 +13,7 @@ import {
   currentCommit,
   repositoryInformation,
   updateBranch
-} from './git-commands'
+} from './git-commands.js'
 import {
   ChangedFile,
   Committer,
@@ -21,7 +21,7 @@ import {
   Method,
   ValueUpdates,
   ContentNode
-} from './types'
+} from './types.js'
 
 const APPEND_ARRAY_EXPRESSION = '[(@.length)]'
 
@@ -31,6 +31,11 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       'updateFile is deprected, the updated content will be written to the file by default from now on'
     )
   }
+
+  const octokit = new Octokit({
+    auth: options.token,
+    baseUrl: options.githubAPI
+  })
 
   try {
     const files: ChangedFile[] = []
@@ -50,11 +55,6 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       return
     }
 
-    const octokit = new Octokit({
-      auth: options.token,
-      baseUrl: options.githubAPI
-    })
-
     await gitProcessing(
       options.repository,
       options.branch,
@@ -66,22 +66,30 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       actions,
       options.committer
     )
+  } catch (error) {
+    const msg = (error as Error).toString()
+    actions.setFailed(`failed to perform commit: ${msg}`)
+    return
+  }
 
-    if (options.createPR) {
-      await createPullRequest(
-        options.repository,
-        options.branch,
-        options.targetBranch,
-        options.labels,
-        options.title || `Merge: ${options.message}`,
-        options.description,
-        options.reviewers,
-        options.teamReviewers,
-        options.assignees,
-        octokit,
-        actions
-      )
-    }
+  if (!options.createPR) {
+    return
+  }
+
+  try {
+    await createPullRequest(
+      options.repository,
+      options.branch,
+      options.targetBranch,
+      options.labels,
+      options.title || `Merge: ${options.message}`,
+      options.description,
+      options.reviewers,
+      options.teamReviewers,
+      options.assignees,
+      octokit,
+      actions
+    )
   } catch (error) {
     const msg = (error as Error).toString()
     if (msg.includes('pull request already exists')) {
@@ -154,7 +162,7 @@ export function writeTo(
   filePath: string,
   actions: Actions
 ): void {
-  fs.writeFile(filePath, content, err => {
+  fs.writeFile(filePath, content, (err) => {
     if (!err) return
 
     actions.warning(err.message)

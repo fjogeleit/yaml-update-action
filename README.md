@@ -1,280 +1,306 @@
-# YAML Update Action
+# Create a GitHub Action Using TypeScript
 
-Update values in an existing YAML or JSON File. Push this updated File to an existing branch or create a new branch. Open a PullRequest to a configurable targetBranch. It is also possible to change the file locally without committing the change.
+[![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
+![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
+[![Check dist/](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml)
+[![CodeQL](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml)
+[![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
+Use this template to bootstrap the creation of a TypeScript action. :rocket:
 
-## Use Cases
+This template includes compilation support, tests, a validation workflow,
+publishing, and versioning guidance.
 
-### Change a local YAML file without committing the change
+If you are new, there's also a simpler introduction in the
+[Hello world JavaScript action repository](https://github.com/actions/hello-world-javascript-action).
 
-With the latest release, the content of your actual file will be updated by default. So, you just need to skip the commit of your change.
+## Create Your Own Action
+
+To create your own action, you can use this repository as a template! Just
+follow the below instructions:
+
+1. Click the **Use this template** button at the top of the repository
+1. Select **Create a new repository**
+1. Select an owner and name for your new repository
+1. Click **Create repository**
+1. Clone your new repository
+
+> [!IMPORTANT]
+>
+> Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
+> details on how to use this file, see
+> [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+
+## Initial Setup
+
+After you've cloned the repository to your local machine or codespace, you'll
+need to perform some initial setup steps before you can develop your action.
+
+> [!NOTE]
+>
+> You'll need to have a reasonably modern version of
+> [Node.js](https://nodejs.org) handy (20.x or later should work!). If you are
+> using a version manager like [`nodenv`](https://github.com/nodenv/nodenv) or
+> [`fnm`](https://github.com/Schniz/fnm), this template has a `.node-version`
+> file at the root of the repository that can be used to automatically switch to
+> the correct version when you `cd` into the repository. Additionally, this
+> `.node-version` file is used by GitHub Actions in any `actions/setup-node`
+> actions.
+
+1. :hammer_and_wrench: Install the dependencies
+
+   ```bash
+   npm install
+   ```
+
+1. :building_construction: Package the TypeScript for distribution
+
+   ```bash
+   npm run bundle
+   ```
+
+1. :white_check_mark: Run the tests
+
+   ```bash
+   $ npm test
+
+   PASS  ./index.test.js
+     ✓ throws invalid number (3ms)
+     ✓ wait 500 ms (504ms)
+     ✓ test runs (95ms)
+
+   ...
+   ```
+
+## Update the Action Metadata
+
+The [`action.yml`](action.yml) file defines metadata about your action, such as
+input(s) and output(s). For details about this file, see
+[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
+
+When you copy this repository, update `action.yml` with the name, description,
+inputs, and outputs for your action.
+
+## Update the Action Code
+
+The [`src/`](./src/) directory is the heart of your action! This contains the
+source code that will be run when your action is invoked. You can replace the
+contents of this directory with your own code.
+
+There are a few things to keep in mind when writing your action code:
+
+- Most GitHub Actions toolkit and CI/CD operations are processed asynchronously.
+  In `main.ts`, you will see that the action is run in an `async` function.
+
+  ```javascript
+  import * as core from '@actions/core'
+  //...
+
+  async function run() {
+    try {
+      //...
+    } catch (error) {
+      core.setFailed(error.message)
+    }
+  }
+  ```
+
+  For more information about the GitHub Actions toolkit, see the
+  [documentation](https://github.com/actions/toolkit/blob/master/README.md).
+
+So, what are you waiting for? Go ahead and start customizing your action!
+
+1. Create a new branch
+
+   ```bash
+   git checkout -b releases/v1
+   ```
+
+1. Replace the contents of `src/` with your action code
+1. Add tests to `__tests__/` for your source code
+1. Format, test, and build the action
+
+   ```bash
+   npm run all
+   ```
+
+   > This step is important! It will run [`rollup`](https://rollupjs.org/) to
+   > build the final JavaScript action code with all dependencies included. If
+   > you do not run this step, your action will not work correctly when it is
+   > used in a workflow.
+
+1. (Optional) Test your action locally
+
+   The [`@github/local-action`](https://github.com/github/local-action) utility
+   can be used to test your action locally. It is a simple command-line tool
+   that "stubs" (or simulates) the GitHub Actions Toolkit. This way, you can run
+   your TypeScript action locally without having to commit and push your changes
+   to a repository.
+
+   The `local-action` utility can be run in the following ways:
+
+   - Visual Studio Code Debugger
+
+     Make sure to review and, if needed, update
+     [`.vscode/launch.json`](./.vscode/launch.json)
+
+   - Terminal/Command Prompt
+
+     ```bash
+     # npx @github/local action <action-yaml-path> <entrypoint> <dotenv-file>
+     npx @github/local-action . src/main.ts .env
+     ```
+
+   You can provide a `.env` file to the `local-action` CLI to set environment
+   variables used by the GitHub Actions Toolkit. For example, setting inputs and
+   event payload data used by your action. For more information, see the example
+   file, [`.env.example`](./.env.example), and the
+   [GitHub Actions Documentation](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables).
+
+1. Commit your changes
+
+   ```bash
+   git add .
+   git commit -m "My first action is ready!"
+   ```
+
+1. Push them to your repository
+
+   ```bash
+   git push -u origin releases/v1
+   ```
+
+1. Create a pull request and get feedback on your action
+1. Merge the pull request into the `main` branch
+
+Your action is now published! :rocket:
+
+For information about versioning your action, see
+[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
+in the GitHub Actions toolkit.
+
+## Validate the Action
+
+You can now validate the action by referencing it in a workflow file. For
+example, [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an
+action in the same repository.
 
 ```yaml
-name: 'workflow'
-on:
-  push:
-    branches:
-      - main
+steps:
+  - name: Checkout
+    id: checkout
+    uses: actions/checkout@v4
 
-jobs:
-  test-update-file:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Update values.yaml
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'file.yaml'
-          propertyPath: 'file.version'
-          value: v1.0.1
-          commitChange: false
+  - name: Test Local Action
+    id: test-action
+    uses: ./
+    with:
+      milliseconds: 1000
+
+  - name: Print Output
+    id: output
+    run: echo "${{ steps.test-action.outputs.time }}"
 ```
 
-### Update Helm Chart after a new Docker Image was build
+For example workflow runs, check out the
+[Actions tab](https://github.com/actions/typescript-action/actions)! :rocket:
 
-Update the image version configuration inside of my helm `values.yaml` after the related GitHub Workflow build and pushed a new version of my Docker Image to the GitHub Package Registry.
+## Usage
+
+After testing, you can create version tag(s) that developers can use to
+reference different stable versions of your action. For more information, see
+[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
+in the GitHub Actions toolkit.
+
+To include the action in a workflow in another repository, you can use the
+`uses` syntax with the `@` symbol to reference a specific branch, tag, or commit
+hash.
 
 ```yaml
-env:
-  IMAGE_NAME: image
+steps:
+  - name: Checkout
+    id: checkout
+    uses: actions/checkout@v4
 
-jobs:
-  push:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  - name: Test Local Action
+    id: test-action
+    uses: actions/typescript-action@v1 # Commit with the `v1` tag
+    with:
+      milliseconds: 1000
 
-      - name: Build app image
-        run: docker build . --tag image
-
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      - name: Push app image
-        id: image
-        run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$FILES_IMAGE_NAME
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "main" ] && VERSION=$(echo ${{ github.sha }} | cut -c1-8)
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag image $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-          echo "::set-output name=version::$VERSION"
-
-      - name: Update Image Version in the related HelmChart values.yaml
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'deployment/helm/values.yaml'
-          propertyPath: 'backend.version'
-          value: ${{ steps.image.outputs.version }}
-          branch: deployment/${{ steps.image.outputs.version }}
-          targetBranch: development
-          createPR: true
-          message: 'Update Image Version to ${{ steps.image.outputs.version }}' 
+  - name: Print Output
+    id: output
+    run: echo "${{ steps.test-action.outputs.time }}"
 ```
 
-## Input Arguments
+## Publishing a New Release
 
-### Base Configurations
+This project includes a helper script, [`script/release`](./script/release)
+designed to streamline the process of tagging and pushing new releases for
+GitHub Actions.
 
-| Argument     | Description                                                                                                                                                                                                                                                                     | Default                                   |
-|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| valueFile    | relative path from the Workspace Directory                                                                                                                                                                                                                                      | _required_ Field if `changes` is not used |
-| propertyPath | PropertyPath for the new value, JSONPath supported                                                                                                                                                                                                                              | _required_ Field if `changes` is not used |
-| value        | New value for the related PropertyPath                                                                                                                                                                                                                                          | _required_ Field if `changes` is not used |
-| changes      | Configure changes on multiple values and/or multiple files. Expects all changes as JSON, supported formats are `{"filepath":{"propertyPath":"value"}}` and `{"propertyPath":"value"}`. If you use the second format, it uses the filepath provided from the `valueFile` intput. |                                           |
-| updateFile   | **(deprecated)** the updated content will be written into the actual file by default                                                                                                                                                                                            | `false`                                   |
-| workDir      | Relative location of the configured `repository`                                                                                                                                                                                                                                | .                                         |                     |
-| format       | Specify the used format parser of your file. WIll be guessed by file extension if not provided and uses YAML as fallback. Supports `YAML` and `JSON`                                                                                                                            |                                           |
-| method       | Configures the processing of none existing properties. Possible values: `CreateOrUpdate`, `Update`, `Create`                                                                                                                                                                    | `CreateOrUpdate`                          |
-| noCompatMode | Removes quotes from reserved words, like Y, N, yes, no, on, etc.                                                                                                                                                                                                                | `false`                                   |
-| quotingType | used quotes for string values in YAML output                                                                                                                                                                                                               | `'`                                   |
+GitHub Actions allows users to select a specific version of the action to use,
+based on release tags. This script simplifies this process by performing the
+following steps:
 
-#### Methods
+1. **Retrieving the latest release tag:** The script starts by fetching the most
+   recent SemVer release tag of the current branch, by looking at the local data
+   available in your repository.
+1. **Prompting for a new release tag:** The user is then prompted to enter a new
+   release tag. To assist with this, the script displays the tag retrieved in
+   the previous step, and validates the format of the inputted tag (vX.X.X). The
+   user is also reminded to update the version field in package.json.
+1. **Tagging the new release:** The script then tags a new release and syncs the
+   separate major tag (e.g. v1, v2) with the new release tag (e.g. v1.0.0,
+   v2.1.2). When the user is creating a new major release, the script
+   auto-detects this and creates a `releases/v#` branch for the previous major
+   version.
+1. **Pushing changes to remote:** Finally, the script pushes the necessary
+   commits, tags and branches to the remote repository. From here, you will need
+   to create a new release in GitHub so users can easily reference the new tags
+   in their workflows.
 
-Determine the behavior for none existing properties or array elements.
+## Dependency License Management
 
-| Enum           | Description                                                                   |
-|----------------|-------------------------------------------------------------------------------|
-| CreateOrUpdate | Updates existing values or creates them if not available                      |
-| Update         | Updates existing values, skips the change if not                              |
-| Create         | Creates none existing values, skips the change if the property already exists |
+This template includes a GitHub Actions workflow,
+[`licensed.yml`](./.github/workflows/licensed.yml), that uses
+[Licensed](https://github.com/licensee/licensed) to check for dependencies with
+missing or non-compliant licenses. This workflow is initially disabled. To
+enable the workflow, follow the below steps.
 
-### Git related Configurations
+1. Open [`licensed.yml`](./.github/workflows/licensed.yml)
+1. Uncomment the following lines:
 
-| Argument         | Description                                                                                                                                                                                                      | Default                                               |
-|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| commitChange     | Commit the change to __branch__ with the given __message__                                                                                                                                                       | `true`                                                |
-| message          | Commit message for the changed YAML file                                                                                                                                                                         | ''                                                    |
-| labels           | Comma separated list of labels, e.g. "feature, yaml-updates"                                                                                                                                                     | 'yaml-updates'                                        |
-| createPR         | Create a PR from __branch__ to __targetBranch__. Use 'true' to enable it                                                                                                                                         | `false`                                                |
-| title            | Custom title for the created Pull Request                                                                                                                                                                        | 'Merge: {{message}}'                                  |
-| description      | Custom description for the created Pull Request                                                                                                                                                                  | ''                                                    |
-| masterBranchName | Branch name of your master branch                                                                                                                                           
-| targetBranch     | Opens a PR from __branch__ to __targetBranch__  if createPR is set to 'true'                                                                                                                                     | `${masterBranchName}`                                              |
-| repository       | The Repository where the YAML file is located and should be updated. You have to checkout this repository too and set the working-directory for this action to the same as the repository. See the example below | ${{github.repository}}                                |
-| branch           | The updated YAML file will be committed to this branch, branch will be created if not exists                                                                                                                     | `${masterBranchName}`                                              |
-| force            | Allows force pushes                                                                                                                                                                                              | `false`                                               |                                     | `master`                                              |
-| githubAPI        | BaseURL for all GitHub REST API requests                                                                                                                                                                         | https://api.github.com                                |
-| token            | GitHub API Token which is used to create the PR, have to have right permissions for the selected repository                                                                                                      | ${{github.token}}                                     |
-| commitUserName   | Name used for the commit user                                                                                                                                                                                    | github-actions[bot]                                   |
-| commitUserEmail  | Email address used for the commit user                                                                                                                                                                           | 41898282+github-actions[bot]@users.noreply.github.com |
+   ```yaml
+   # pull_request:
+   #   branches:
+   #     - main
+   # push:
+   #   branches:
+   #     - main
+   ```
 
-### Output
+1. Save and commit the changes
 
-- `commit` Git Commit SHA
-- `pull_request` Git PR Information
+Once complete, this workflow will run any time a pull request is created or
+changes pushed directly to `main`. If the workflow detects any dependencies with
+missing or non-compliant licenses, it will fail the workflow and provide details
+on the issue(s) found.
 
-## Debug Information
+### Updating Licenses
 
-Enable Debug mode to get information about
+Whenever you install or update dependencies, you can use the Licensed CLI to
+update the licenses database. To install Licensed, see the project's
+[Readme](https://github.com/licensee/licensed?tab=readme-ov-file#installation).
 
-- YAML parse and update results
-- Git Steps
+To update the cached licenses, run the following command:
 
-## Known Issues
-
-In this first version the updated YAML file will not be patched. It is parsed into JSON, after the update its converted back to YAML. This means that comments and blank lines will be removed in this process and the intend of the updated content can be different to the previous.
-
-By default, each value will be interpreted as string. To use other kinds of value types you can use the specified YAML tags as shown here: [JS-YAML -Supported YAML types](https://github.com/nodeca/js-yaml#supported-yaml-types). Use this syntax as string, see the [test workflows](https://github.com/fjogeleit/yaml-update-action/blob/main/.github/workflows/test.yml) as example
-
-## Examples
-
-### Multi Value Changes
-
-```yaml
-jobs:
-  test-multiple-value-changes:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'deployment/helm/values.yaml'
-          branch: deployment/dev
-          targetBranch: main
-          createPR: 'true'
-          description: Test GitHub Action
-          message: 'Update All Images' 
-          title: 'Version Updates '
-          changes: |
-            {
-              "backend.version": "${{ steps.image.outputs.backend.version }}",
-              "frontend.version": "${{ steps.image.outputs.frontend.version }}"
-            }
+```bash
+licensed cache
 ```
 
-### Multi File Changes
+To check the status of cached licenses, run the following command:
 
-```yaml
-jobs:
-  test-multiple-file-changes:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'deployment/helm/values.yaml'
-          branch: deployment/v1.0.1
-          targetBranch: main
-          createPR: 'true'
-          description: Test GitHub Action
-          message: 'Update All Images' 
-          title: 'Version Updates '
-          changes: |
-            {
-              "__tests__/fixtures/values.dev.yaml": {
-                "backend.version": "v1.0.1"
-              },
-              "__tests__/fixtures/values.stage.yaml": {
-                "backend.version": "v1.0.1"
-              },
-              "__tests__/fixtures/values.prod.yaml": {
-                "backend.version": "v1.0.1"
-              }
-            }
-```
-
-### Change a YAML Multifile
-
-Yaml supports multiple documents in a single file separated by `---`.
-To update such a file, start the property path with the index of the document to be changed.
-
-```yaml
-jobs:
-  test-multifile-changes:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'deployment/helm/values.yaml'
-          branch: deployment/v1.0.1
-          targetBranch: main
-          createPR: 'true'
-          description: Test GitHub Action
-          message: 'Update Images'
-          title: 'Version Updates '
-          changes: |
-            {
-              "__tests__/fixtures/multivalue.yaml": {
-                "[0].backend.version": "v1.1.0",
-                "[1].containers[1].image": "node:alpine"
-              }
-            }
-```
-
-### Advanced Example with an separate target repository
-
-```yaml
-env:
-  IMAGE_NAME: image
-
-jobs:
-  push:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-            path: main
-
-      - name: Build app image
-        run: docker build . --tag image
-        working-directory: ./main
-
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      - name: Push app image
-        id: image
-        run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$FILES_IMAGE_NAME
-          ....
-          echo "::set-output name=version::$VERSION"
-
-      - name: Checkout Target Repository
-        uses: actions/checkout@v3
-        with:
-          repository: owner/target-repository
-          path: infrastructure
-          token: ${{ secrets.GITHUB_TOKEN }} 
-
-      - name: Update Image Version in the related HelmChart values.yaml
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          valueFile: 'deployment/helm/values.yaml'
-          propertyPath: 'backend.version'
-          value: ${{ steps.image.outputs.version }}
-          repository: owner/target-repository
-          branch: deployment/${{ steps.image.outputs.version }}
-          targetBranch: development
-          createPR: true
-          message: 'Update Image Version to ${{ steps.image.outputs.version }}'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          workDir: infrastructure
+```bash
+licensed status
 ```

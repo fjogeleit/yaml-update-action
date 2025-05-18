@@ -1,6 +1,5 @@
-import { run } from './action'
-import { GitHubOptions } from './options'
-import { GitHubActions } from './github-actions'
+import { run } from './action.js'
+import { GitHubOptions } from './options.js'
+import { GitHubActions } from './github-actions.js'
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
 run(new GitHubOptions(), new GitHubActions())

@@ -1,6 +1,6 @@
 import { loadAll, dump } from 'js-yaml'
 import fs from 'fs'
-import { Format, ContentNode, FormatParser, QuotingType } from './types'
+import { Format, ContentNode, FormatParser, QuotingType } from './types.js'
 
 export const formatGuesser = (filename: string): Format => {
   if (filename.endsWith(Format.JSON)) {
@@ -54,7 +54,7 @@ class YAMLMultiFileParser {
   ): string {
     if (this.isMultifile) {
       const entries = content as unknown as T[]
-      const fileContents = entries.map(v => this.internal_dump(v, options))
+      const fileContents = entries.map((v) => this.internal_dump(v, options))
       return fileContents.join('\n\n---\n\n')
     } else {
       return this.internal_dump(content, options)

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as core from '@actions/core'
 
 export interface Actions {

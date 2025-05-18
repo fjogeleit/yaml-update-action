@@ -1,6 +1,6 @@
 import { load } from 'js-yaml'
 import * as core from '@actions/core'
-import { Changes } from './types'
+import { Changes } from './types.js'
 
 export const convertValue = (value: string): string | number | boolean => {
   if (!value.startsWith('!!')) {
