@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest'
-import { Actions } from './github-actions'
-import { Committer, ChangedFile } from './types'
+import { Actions } from './github-actions.js'
+import { Committer, ChangedFile } from './types.js'
 
 export type GitCreateTreeParamsTree = {
   path?: string
@@ -35,7 +35,7 @@ export const currentCommit = async (
     }
 
     commitSha = refData.object?.sha
-  } catch (error) {
+  } catch {
     const { data: refData } = await octo.git.getRef({
       owner: org,
       repo,

@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as process from 'process'
-import { convertValue, parseChanges } from './helper'
-import { Committer, Changes, Method, Format, QuotingType } from './types'
+import { convertValue, parseChanges } from './helper.js'
+import { Committer, Changes, Method, Format, QuotingType } from './types.js'
 
 export interface Options {
   valueFile: string
@@ -116,8 +116,8 @@ export class GitHubOptions implements Options {
     return core
       .getInput('labels')
       .split(',')
-      .map(label => label.trim())
-      .filter(label => !!label)
+      .map((label) => label.trim())
+      .filter((label) => !!label)
   }
 
   get reviewers(): string[] {
@@ -126,8 +126,8 @@ export class GitHubOptions implements Options {
     return core
       .getInput('reviewers')
       .split(',')
-      .map(value => value.trim())
-      .filter(value => !!value)
+      .map((value) => value.trim())
+      .filter((value) => !!value)
   }
 
   get teamReviewers(): string[] {
@@ -136,8 +136,8 @@ export class GitHubOptions implements Options {
     return core
       .getInput('teamReviewers')
       .split(',')
-      .map(value => value.trim())
-      .filter(value => !!value)
+      .map((value) => value.trim())
+      .filter((value) => !!value)
   }
 
   get assignees(): string[] {
@@ -146,8 +146,8 @@ export class GitHubOptions implements Options {
     return core
       .getInput('assignees')
       .split(',')
-      .map(value => value.trim())
-      .filter(value => !!value)
+      .map((value) => value.trim())
+      .filter((value) => !!value)
   }
 
   get workDir(): string {
@@ -280,29 +280,29 @@ export class EnvOptions implements Options {
   get labels(): string[] {
     return (process.env.LABELS || '')
       .split(',')
-      .map(label => label.trim())
-      .filter(label => !!label)
+      .map((label) => label.trim())
+      .filter((label) => !!label)
   }
 
   get reviewers(): string[] {
     return (process.env.REVIEWERS || '')
       .split(',')
-      .map(label => label.trim())
-      .filter(label => !!label)
+      .map((label) => label.trim())
+      .filter((label) => !!label)
   }
 
   get teamReviewers(): string[] {
     return (process.env.TEAM_REVIEWERS || '')
       .split(',')
-      .map(label => label.trim())
-      .filter(label => !!label)
+      .map((label) => label.trim())
+      .filter((label) => !!label)
   }
 
   get assignees(): string[] {
     return (process.env.ASSIGNEES || '')
       .split(',')
-      .map(label => label.trim())
-      .filter(label => !!label)
+      .map((label) => label.trim())
+      .filter((label) => !!label)
   }
 
   get repository(): string {

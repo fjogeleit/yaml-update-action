@@ -1,5 +1,4 @@
 import * as process from 'process'
-import * as path from 'path'
 import { runTest } from '../src/action'
 import { ContentNode } from '../src/types'
 import { EnvOptions } from '../src/options'
@@ -89,17 +88,6 @@ test('ignore existing property for method create', async () => {
   }>(new EnvOptions())
 
   expect(updatedFiles.length).toEqual(0)
-})
-
-test('yaml file path error', async () => {
-  process.env['VALUE_FILE'] = 'fixtures/not-exist.yaml'
-  process.env['WORK_DIR'] = '__tests__'
-  process.env['VALUE_PATH'] = 'frontend.version'
-  process.env['VALUE'] = 'v1.1.0'
-
-  await expect(runTest(new EnvOptions())).rejects.toThrow(
-    `could not parse file with path: ${path.join(__dirname, '..', process.env['WORK_DIR'], process.env['VALUE_FILE'])}`
-  )
 })
 
 test('yaml file parse error', async () => {

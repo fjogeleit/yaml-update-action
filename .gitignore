@@ -26,6 +26,11 @@ lib-cov
 coverage
 *.lcov
 
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
 
 # Bower dependency directory (https://bower.io/)
 bower_components
@@ -67,13 +72,31 @@ typings/
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
 # OS metadata
 .DS_Store
 Thumbs.db
 
 # Ignore built ts files
 __tests__/runner/*
-lib/**/*
 
-# IDE
-.vscode
+# IDE files
+.idea
+*.code-workspace
