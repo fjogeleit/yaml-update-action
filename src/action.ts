@@ -1,4 +1,5 @@
 import { load } from 'js-yaml'
+import { execFileSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import jp from 'jsonpath'
@@ -12,7 +13,9 @@ import {
   createNewTree,
   currentCommit,
   repositoryInformation,
-  updateBranch
+  updateBranch,
+  changedPaths,
+  NonFastForwardError
 } from './git-commands'
 import {
   ChangedFile,
@@ -64,7 +67,9 @@ export async function run(options: Options, actions: Actions): Promise<void> {
       options.message,
       octokit,
       actions,
-      options.committer
+      options.committer,
+      localCommit(options.workDir, actions),
+      options.retries
     )
   } catch (error) {
     const msg = (error as Error).toString()
@@ -169,6 +174,25 @@ export function writeTo(
   })
 }
 
+const sleep = async (ms: number): Promise<void> =>
+  new Promise(resolve => setTimeout(resolve, ms))
+
+const normalizePath = (file: string): string => file.replace(/^\.\//, '')
+
+// The commit the local files were read from, or '' if workDir is not a git checkout
+export function localCommit(workDir: string, actions: Actions): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: path.join(process.cwd(), workDir),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim()
+  } catch (error) {
+    actions.debug(`could not resolve the local commit: ${error}`)
+    return ''
+  }
+}
+
 export async function gitProcessing(
   repository: string,
   branch: string,
@@ -178,18 +202,12 @@ export async function gitProcessing(
   commitMessage: string,
   octokit: Octokit,
   actions: Actions,
-  committer: Committer
+  committer: Committer,
+  localCommitSha = '',
+  retries = 0,
+  wait: (ms: number) => Promise<void> = sleep
 ): Promise<void> {
   const { owner, repo } = repositoryInformation(repository)
-  const { commitSha, treeSha } = await currentCommit(
-    octokit,
-    owner,
-    repo,
-    branch,
-    masterBranchName
-  )
-
-  actions.debug(JSON.stringify({ baseCommit: commitSha, baseTree: treeSha }))
   const debugFiles: { [file: string]: string } = {}
 
   for (const file of files) {
@@ -199,24 +217,91 @@ export async function gitProcessing(
 
   actions.debug(JSON.stringify(debugFiles))
 
-  const newTreeSha = await createNewTree(octokit, owner, repo, files, treeSha)
+  // Our file contents are based on this commit. Without a local checkout, fall back
+  // to the branch head we read first
+  let initialCommitSha = localCommitSha
 
-  actions.debug(JSON.stringify({ createdTree: newTreeSha }))
+  for (let attempt = 0; ; attempt++) {
+    const { commitSha, treeSha } = await currentCommit(
+      octokit,
+      owner,
+      repo,
+      branch,
+      masterBranchName
+    )
 
-  const newCommitSha = await createNewCommit(
-    octokit,
-    owner,
-    repo,
-    commitMessage,
-    newTreeSha,
-    commitSha,
-    committer
-  )
+    actions.debug(JSON.stringify({ baseCommit: commitSha, baseTree: treeSha }))
 
-  actions.debug(JSON.stringify({ createdCommit: newCommitSha }))
-  actions.setOutput('commit', newCommitSha)
+    if (!initialCommitSha) {
+      initialCommitSha = commitSha
+    }
 
-  await updateBranch(octokit, owner, repo, branch, force, newCommitSha, actions)
+    if (initialCommitSha !== commitSha) {
+      // Only commit our file contents on top of commits that left those files untouched
+      const changed = await changedPaths(
+        octokit,
+        owner,
+        repo,
+        initialCommitSha,
+        commitSha
+      )
+      const conflicts = files
+        .map(file => normalizePath(file.relativePath))
+        .filter(file => changed.paths.includes(file))
+
+      if (conflicts.length > 0) {
+        throw new Error(
+          `branch ${branch} was updated with changes to ${conflicts.join(', ')} since ${initialCommitSha}, not committing to avoid overwriting them`
+        )
+      }
+
+      if (!changed.complete) {
+        throw new Error(
+          `branch ${branch} was updated with too many changes since ${initialCommitSha} to check them for conflicts, not committing to avoid overwriting them`
+        )
+      }
+    }
+
+    const newTreeSha = await createNewTree(octokit, owner, repo, files, treeSha)
+
+    actions.debug(JSON.stringify({ createdTree: newTreeSha }))
+
+    const newCommitSha = await createNewCommit(
+      octokit,
+      owner,
+      repo,
+      commitMessage,
+      newTreeSha,
+      commitSha,
+      committer
+    )
+
+    actions.debug(JSON.stringify({ createdCommit: newCommitSha }))
+
+    try {
+      await updateBranch(
+        octokit,
+        owner,
+        repo,
+        branch,
+        force,
+        newCommitSha,
+        actions
+      )
+      actions.setOutput('commit', newCommitSha)
+      break
+    } catch (error) {
+      if (!(error instanceof NonFastForwardError) || attempt >= retries) {
+        throw error
+      }
+
+      const delay = Math.floor(1000 + Math.random() * 4000)
+      actions.info(
+        `branch ${branch} was updated concurrently, retrying in ${delay}ms (attempt ${attempt + 2}/${retries + 1})`
+      )
+      await wait(delay)
+    }
+  }
 
   actions.debug(`Complete`)
 }

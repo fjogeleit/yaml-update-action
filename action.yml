@@ -36,6 +36,10 @@ inputs:
     required: false
     description: 'Branch to commit the change, will be created if not exist'
     default: 'false'
+  retries:
+    required: false
+    description: 'How often to retry the commit when the branch was updated concurrently. Only applies if none of the changed files were modified in the meantime'
+    default: '3'
   masterBranchName:
     required: false
     description: 'Branch name of your master'

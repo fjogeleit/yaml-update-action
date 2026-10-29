@@ -138,6 +138,53 @@ export const createNewCommit = async (
   return data.sha
 }
 
+export class NonFastForwardError extends Error {}
+
+const isNonFastForward = (error: unknown): boolean => {
+  const { status, message } = error as { status?: number; message?: string }
+
+  return status === 422 && /not a fast forward/i.test(message || '')
+}
+
+// The compare API lists at most this many changed files
+const COMPARE_FILES_LIMIT = 300
+
+export const changedPaths = async (
+  octo: Octokit,
+  owner: string,
+  repo: string,
+  base: string,
+  head: string
+): Promise<{ paths: string[]; complete: boolean }> => {
+  let files
+  try {
+    const { data } = await octo.repos.compareCommits({
+      owner,
+      repo,
+      base,
+      head
+    })
+    files = data.files || []
+  } catch (error) {
+    if ((error as { status?: number }).status === 404) {
+      throw new Error(
+        `commit ${base} of the local checkout was not found in ${owner}/${repo}. Either it was never pushed, or workDir is a checkout of a different repository`
+      )
+    }
+
+    throw error
+  }
+
+  return {
+    paths: files.flatMap(file =>
+      file.previous_filename
+        ? [file.filename, file.previous_filename]
+        : [file.filename]
+    ),
+    complete: files.length < COMPARE_FILES_LIMIT
+  }
+}
+
 export const updateBranch = async (
   octo: Octokit,
   owner: string,
@@ -156,6 +203,11 @@ export const updateBranch = async (
       force
     })
   } catch (error) {
+    // The branch moved since we read it, creating it would fail as well
+    if (!force && isNonFastForward(error)) {
+      throw new NonFastForwardError(`update branch ${branch} failed (${error})`)
+    }
+
     actions.info(
       `update branch ${branch} failed (${error}), fallback to create branch`
     )
@@ -168,7 +220,7 @@ export const updateBranch = async (
         sha: commitSha
       })
     } catch (e) {
-      actions.setFailed(`failed to create branch: ${e}`)
+      throw new Error(`failed to create branch: ${e}`)
     }
   }
 }
